@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProjectManager Sidebar</title>
+    <style>
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+
+   
+        #sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 288px;
+            background: linear-gradient(to bottom, #0B243B, #1A435E);
+            color: white;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            z-index: 50;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease;
+        }
+
+        @media (min-width: 1024px) {
+            #sidebar {
+                transform: translateX(0);
+            }
+        }
+
+      
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid rgba(44, 142, 153, 0.3);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .header-logo {
+            width: 85px;
+            height: 85px;
+            object-fit: contain;
+        }
+
+        .header-info {
+            flex: 1;
+        }
+
+        .header-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            background: linear-gradient(to right, #e9f1f6ff, #2C8E99, #48C0C4);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-email {
+            font-size: 0.75rem;
+            color: rgba(209, 217, 224, 0.7);
+        }
+
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem 1rem;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Section Button */
+        .section-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: #D1D9E0;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            margin-bottom: 0.75rem;
+            transition: color 0.2s;
+        }
+
+        .section-button:hover {
+            color: white;
+        }
+
+        .section-button-left {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .section-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .section-icon-owner {
+            color: #ecf5f5ff;
+        }
+
+        .section-icon-shared {
+            color: #e9f1f2ff;
+        }
+
+        .section-icon-tasks {
+            color: #e5eeeeff;
+        }
+
+        .section-title {
+            font-weight: 600;
+        }
+
+        .section-badge {
+            padding: 0.125rem 0.5rem;
+            font-size: 0.75rem;
+            border-radius: 9999px;
+            font-weight: 700;
+        }
+
+        .badge-owner {
+            background-color: #48C0C4;
+            color: #0B243B;
+        }
+
+        .badge-shared {
+            background-color: #2C8E99;
+            color: white;
+        }
+
+        .badge-tasks {
+            background-color: #48C0C4;
+            color: #0B243B;
+        }
+
+        .section-chevron {
+            width: 1rem;
+            height: 1rem;
+            color: #2C8E99;
+            transition: transform 0.3s;
+        }
+
+        .section-chevron.rotated {
+            transform: rotate(180deg);
+        }
+
+        /* Section List */
+        .section-list {
+            margin-left: 1.75rem;
+        }
+
+        .section-list.hidden {
+            display: none;
+        }
+
+        .list-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.875rem;
+            color: #D1D9E0;
+            text-decoration: none;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+            margin-bottom: 0.25rem;
+        }
+
+        .list-item:hover {
+            background-color: #1A435E;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(72, 192, 196, 0.1);
+            border-color: rgba(44, 142, 153, 0.3);
+        }
+
+        .role-icon {
+            width: 1rem;
+            height: 1rem;
+            flex-shrink: 0;
+        }
+
+        .role-icon-owner {
+            color: #48C0C4;
+        }
+
+        .role-icon-member {
+            color: #2C8E99;
+        }
+
+        .status-dot {
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 9999px;
+            flex-shrink: 0;
+        }
+
+        .dot-owner {
+            background-color: #48C0C4;
+        }
+
+        .dot-member {
+            background-color: #2C8E99;
+        }
+
+        .dot-task {
+            background-color: #48C0C4;
+        }
+
+        .item-text {
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .item-title {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-subtitle {
+            font-size: 0.75rem;
+            color: rgba(209, 217, 224, 0.5);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-arrow {
+            width: 1rem;
+            height: 1rem;
+            color: #48C0C4;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .list-item:hover .item-arrow {
+            opacity: 1;
+        }
+
+        .loading-spinner {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 0;
+        }
+
+        .spinner {
+            width: 1.5rem;
+            height: 1.5rem;
+            border: 2px solid #48C0C4;
+            border-top-color: transparent;
+            border-radius: 9999px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-message {
+            font-size: 0.75rem;
+            color: rgba(209, 217, 224, 0.6);
+            font-style: italic;
+            padding: 0.5rem 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .empty-icon {
+            width: 1rem;
+            height: 1rem;
+            color: rgba(209, 217, 224, 0.4);
+        }
+
+        .more-items {
+            font-size: 0.75rem;
+            color: rgba(209, 217, 224, 0.6);
+            font-style: italic;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .more-icon {
+            width: 0.875rem;
+            height: 0.875rem;
+            color: #48C0C4;
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(44, 142, 153, 0.3);
+            padding: 1rem;
+        }
+
+        .footer-button {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            background: none;
+            text-align: left;
+            text-decoration: none;
+        }
+
+        .btn-settings {
+            color: #D1D9E0;
+        }
+
+        .btn-settings:hover {
+            background-color: #1A435E;
+            box-shadow: 0 10px 15px -3px rgba(72, 192, 196, 0.2);
+        }
+
+        .btn-logout {
+            color: #ff6b6b;
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            margin-top: 0.5rem;
+        }
+
+        .btn-logout:hover {
+            background-color: rgba(255, 107, 107, 0.1);
+            border-color: #ff6b6b;
+        }
+
+        .footer-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+        .icon-settings {
+            color: #48C0C4;
+        }
+
+        .footer-text {
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+<aside id="sidebar">
+    <!-- Header -->
+    <div class="sidebar-header">
+        <div class="header-content">
+            <img src="/images/Adobe.png" alt="ProjectManager Logo" class="header-logo">
+            <div class="header-info">
+                <h2 class="header-title">Projekto</h2>
+                <p class="header-email" id="userEmail">loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+        
+        <!-- My Projects (Owner) -->
+        <div class="nav-section">
+            <button onclick="toggleSection('myProjects')" class="section-button">
+                <div class="section-button-left">
+                    <svg class="section-icon section-icon-owner" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                    </svg>
+                    <span class="section-title">My Projects</span>
+                    <span id="myProjectsCount" class="section-badge badge-owner">0</span>
+                </div>
+                <svg id="myProjectsIcon" class="section-chevron rotated" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="myProjectsList" class="section-list">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shared Projects -->
+        <div class="nav-section">
+            <button onclick="toggleSection('sharedProjects')" class="section-button">
+                <div class="section-button-left">
+                    <svg class="section-icon section-icon-shared" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span class="section-title">Shared Projects</span>
+                    <span id="sharedProjectsCount" class="section-badge badge-shared">0</span>
+                </div>
+                <svg id="sharedProjectsIcon" class="section-chevron rotated" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="sharedProjectsList" class="section-list">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Tasks -->
+        <div class="nav-section">
+            <button onclick="toggleSection('tasks')" class="section-button">
+                <div class="section-button-left">
+                    <svg class="section-icon section-icon-tasks" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <span class="section-title">My Tasks</span>
+                    <span id="tasksCount" class="section-badge badge-tasks">0</span>
+                </div>
+                <svg id="tasksIcon" class="section-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+            </button>
+            <div id="tasksList" class="section-list hidden">
+                <div class="loading-spinner">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+        </div>
+
+    </nav>
+
+    <!-- Footer -->
+    <div class="sidebar-footer">
+        <a href="/users/settings" class="footer-button btn-settings">
+            <svg class="footer-icon icon-settings" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <span class="footer-text">Settings</span>
+        </a>
+        <button onclick="logout()" class="footer-button btn-logout">
+            <svg class="footer-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+            </svg>
+            <span class="footer-text">Logout</span>
+        </button>
+    </div>
+</aside>
+
+<script>
+
+let activeProjectId = null;
+let sidebarUserToken = null;
+let sidebarUserId = null;
+let sidebarAllProjects = [];
+let sidebarAllTasks = [];
+
+document.addEventListener('DOMContentLoaded', async () => {
+    const token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token || !user.id) return;
+
+    sidebarUserToken = token;
+    sidebarUserId = user.id;
+
+    document.getElementById('userEmail').textContent =
+        user.email || 'user@example.com';
+
+    await loadSidebarData();
+});
+
+
+async function loadSidebarData() {
+    try {
+        const projectsResponse = await fetch('/projects/', {
+            headers: {
+                'Authorization': `Bearer ${sidebarUserToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (projectsResponse.ok) {
+            sidebarAllProjects = await projectsResponse.json();
+            const userIdNum = Number(sidebarUserId);
+
+            const myProjects = sidebarAllProjects.filter(
+                p => Number(p.creator_id) === userIdNum
+            );
+
+            const sharedProjects = sidebarAllProjects.filter(p => {
+                const isMember = Array.isArray(p.creator_ids) && 
+                               p.creator_ids.some(id => Number(id) === userIdNum);
+                const isCreator = Number(p.creator_id) === userIdNum;
+                return isMember && !isCreator;
+            });
+
+            displaySidebarProjects('myProjects', myProjects, true);
+            displaySidebarProjects('sharedProjects', sharedProjects, false);
+        }
+
+        await loadUserTasks();
+    } catch (e) {
+        console.error('Error loading sidebar data:', e);
+    }
+}
+
+
+async function loadUserTasks() {
+    try {
+        const response = await fetch('/tasks/', {
+            headers: {
+                'Authorization': `Bearer ${sidebarUserToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) {
+            displaySidebarTasks([]);
+            return;
+        }
+
+        const allTasks = await response.json();
+        sidebarAllTasks = allTasks.filter(
+            t => Number(t.user_id) === Number(sidebarUserId)
+        );
+
+        sidebarAllTasks.forEach(task => {
+            const project = sidebarAllProjects.find(p => p.id === task.project_id);
+            if (project) task.project_title = project.title;
+        });
+
+        filterTasksByProject();
+    } catch (e) {
+        console.error('Error loading tasks:', e);
+        displaySidebarTasks([]);
+    }
+}
+
+function filterTasksByProject() {
+    if (!activeProjectId) {
+        displaySidebarTasks(sidebarAllTasks);
+        return;
+    }
+    displaySidebarTasks(sidebarAllTasks.filter(t => t.project_id === activeProjectId));
+}
+
+function setActiveProject(projectId) {
+    activeProjectId = projectId;
+    filterTasksByProject();
+    document.getElementById('tasksList')?.classList.remove('hidden');
+    const tasksIcon = document.getElementById('tasksIcon');
+    if (tasksIcon) tasksIcon.classList.add('rotated');
+}
+
+
+function displaySidebarProjects(type, projects, isOwner) {
+    const listId = type === 'myProjects' ? 'myProjectsList' : 'sharedProjectsList';
+    const countId = type === 'myProjects' ? 'myProjectsCount' : 'sharedProjectsCount';
+
+    const container = document.getElementById(listId);
+    const count = document.getElementById(countId);
+
+    if (!container || !count) return;
+
+    count.textContent = projects.length;
+
+    if (!projects.length) {
+        container.innerHTML = `
+            <p class="empty-message">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                </svg>
+                No projects
+            </p>
+        `;
+        return;
+    }
+
+    const roleIconOwner = `<svg class="role-icon role-icon-owner" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+    </svg>`;
+    
+    const roleIconMember = `<svg class="role-icon role-icon-member" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+    </svg>`;
+
+    const roleIcon = isOwner ? roleIconOwner : roleIconMember;
+    const dotClass = isOwner ? 'dot-owner' : 'dot-member';
+
+    container.innerHTML = projects.map(p => `
+        <a href="/projects/show/${p.id}" class="list-item">
+            ${roleIcon}
+            <span class="status-dot ${dotClass}"></span>
+            <span class="item-text">
+                <span class="item-title">${p.title}</span>
+            </span>
+            <svg class="item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+    `).join('');
+}
+
+
+function displaySidebarTasks(tasks) {
+    const container = document.getElementById('tasksList');
+    const count = document.getElementById('tasksCount');
+
+    if (!container || !count) return;
+
+    count.textContent = tasks.length;
+
+    if (!tasks.length) {
+        container.innerHTML = `
+            <p class="empty-message">
+                <svg class="empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                </svg>
+                No assigned tasks
+            </p>
+        `;
+        return;
+    }
+
+    container.innerHTML = tasks.slice(0, 5).map(t => `
+        <a href="/projects/${t.project_id}/tasks" class="list-item">
+            <span class="status-dot dot-task"></span>
+            <div class="item-text">
+                <p class="item-title">${t.title}</p>
+                ${t.project_title ? `<p class="item-subtitle">${t.project_title}</p>` : ''}
+            </div>
+            <svg class="item-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+    `).join('');
+
+    if (tasks.length > 5) {
+        container.innerHTML += `
+            <p class="more-items">
+                <svg class="more-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+                </svg>
+                ${tasks.length - 5} more tasks
+            </p>
+        `;
+    }
+}
+
+
+function toggleSection(name) {
+    const list = document.getElementById(`${name}List`);
+    const icon = document.getElementById(`${name}Icon`);
+    
+    if (!list || !icon) return;
+    
+    list.classList.toggle('hidden');
+    icon.classList.toggle('rotated');
+}
+
+function logout() {
+    const confirmLogout = confirm('Are you sure you want to log out?');
+    
+    if (confirmLogout) {
+        localStorage.clear();
+        window.location.href = '/users/login-form';
+    }
+}
+
+
+const sidebarToggleBtn = document.getElementById('sidebarToggle');
+const sidebar = document.getElementById('sidebar');
+
+if (sidebarToggleBtn && sidebar) {
+    sidebarToggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('-translate-x-full');
+    });
+}
+</script>
+
+</body>
+</html>

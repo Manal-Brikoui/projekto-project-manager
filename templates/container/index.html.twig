@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar Navigation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100">
+    
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-2xl z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+        <!-- Header -->
+        <div class="p-6 border-b border-slate-700">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h2 class="font-bold text-lg">ProjectManager</h2>
+                    <p class="text-xs text-slate-400" id="userEmail">Loading...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-1 overflow-y-auto px-4 py-6 space-y-6" style="height: calc(100vh - 220px);">
+            
+            <!-- Back to Projects -->
+            <div>
+                <button onclick="goToProjects()" class="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all shadow-md hover:shadow-lg group">
+                    <svg class="w-5 h-5 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    <span class="font-semibold">Back to Projects</span>
+                </button>
+            </div>
+
+            <div class="border-t border-slate-700 pt-4"></div>
+
+            <!-- My Projects -->
+            <div>
+                <button onclick="toggleSection('myProjects')" class="w-full flex items-center justify-between text-slate-300 hover:text-white mb-3 group">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/>
+                        </svg>
+                        <span class="font-semibold">My Projects</span>
+                        <span id="myProjectsCount" class="px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">0</span>
+                    </div>
+                    <svg id="myProjectsIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="myProjectsList" class="space-y-1 ml-7 hidden">
+                    <div class="flex items-center justify-center py-4">
+                        <div class="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Shared Projects -->
+            <div>
+                <button onclick="toggleSection('sharedProjects')" class="w-full flex items-center justify-between text-slate-300 hover:text-white mb-3 group">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                        <span class="font-semibold">Shared Projects</span>
+                        <span id="sharedProjectsCount" class="px-2 py-0.5 bg-purple-500 text-white text-xs rounded-full">0</span>
+                    </div>
+                    <svg id="sharedProjectsIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="sharedProjectsList" class="space-y-1 ml-7 hidden">
+                    <div class="flex items-center justify-center py-4">
+                        <div class="w-6 h-6 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My Tasks -->
+            <div>
+                <button onclick="toggleSection('tasks')" class="w-full flex items-center justify-between text-slate-300 hover:text-white mb-3 group">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                        <span class="font-semibold">My Tasks</span>
+                        <span id="tasksCount" class="px-2 py-0.5 bg-green-500 text-white text-xs rounded-full">0</span>
+                    </div>
+                    <svg id="tasksIcon" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <div id="tasksList" class="space-y-1 ml-7 hidden">
+                    <div class="flex items-center justify-center py-4">
+                        <div class="w-6 h-6 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                </div>
+            </div>
+
+        </nav>
+
+        <!-- Footer -->
+        <div class="border-t border-slate-700 p-4">
+            <button onclick="window.location.href='/settings'" class="w-full flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 rounded-lg transition-all">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span class="font-medium">Settings</span>
+            </button>
+            <button onclick="logout()" class="w-full flex items-center gap-3 px-4 py-3 text-red-400 hover:bg-red-500/10 rounded-lg transition-all mt-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                </svg>
+                <span class="font-medium">Logout</span>
+            </button>
+        </div>
+    </aside>
+
+    <!-- Toggle Sidebar Button -->
+    <button id="sidebarToggle" class="fixed top-4 left-4 z-40 lg:hidden bg-slate-900 text-white p-3 rounded-lg shadow-lg">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+
+    <script>
+        let currentUserId = null;
+        let userToken = null;
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            
+            if (!token || !user.id) {
+                window.location.href = '/users/login-form';
+                return;
+            }
+
+            currentUserId = user.id;
+            userToken = token;
+            
+            document.getElementById('userEmail').textContent = user.email || 'User';
+
+            try {
+                await Promise.all([
+                    loadSidebarProjects(),
+                    loadSidebarTasks()
+                ]);
+            } catch (error) {
+                console.error('Error loading sidebar:', error);
+            }
+        });
+
+        // Load projects for sidebar
+        async function loadSidebarProjects() {
+            try {
+                const response = await fetch('/projects/', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Loading error');
+                
+                const allProjects = await response.json();
+                
+                const ownedProjects = allProjects.filter(p => 
+                    p.creator_ids?.length > 0 && p.creator_ids[0] === currentUserId
+                );
+                
+                const sharedProjects = allProjects.filter(p => 
+                    p.creator_ids?.includes(currentUserId) && 
+                    p.creator_ids[0] !== currentUserId
+                );
+
+                document.getElementById('myProjectsCount').textContent = ownedProjects.length;
+                document.getElementById('sharedProjectsCount').textContent = sharedProjects.length;
+
+                displaySidebarProjects('myProjectsList', ownedProjects, true);
+                displaySidebarProjects('sharedProjectsList', sharedProjects, false);
+
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function displaySidebarProjects(containerId, projects, isOwner) {
+            const container = document.getElementById(containerId);
+            
+            if (projects.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">No projects</p>';
+                return;
+            }
+
+            // SVG icons for owner/member
+            const ownerIcon = `<svg class="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>`;
+            
+            const memberIcon = `<svg class="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+            </svg>`;
+
+            const icon = isOwner ? ownerIcon : memberIcon;
+            
+            container.innerHTML = projects.map(project => `
+                <a href="/projects/show/${project.id}" class="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-all group">
+                    ${icon}
+                    <div class="w-2 h-2 rounded-full ${getStatusColor(project.status)}"></div>
+                    <span class="flex-1 truncate">${project.title}</span>
+                    <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            `).join('');
+        }
+
+        // Load tasks
+        async function loadSidebarTasks() {
+            try {
+                const response = await fetch(`/users/view/${currentUserId}/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error');
+                
+                const tasks = await response.json();
+                displayTasks(tasks);
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                document.getElementById('tasksList').innerHTML = '<p class="text-xs text-red-400">Error</p>';
+            }
+        }
+
+        function displayTasks(tasks) {
+            const container = document.getElementById('tasksList');
+            const count = document.getElementById('tasksCount');
+            
+            count.textContent = tasks.length;
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<p class="text-xs text-slate-400 italic">No tasks</p>';
+                return;
+            }
+
+            container.innerHTML = tasks.slice(0, 5).map(task => `
+                <div class="flex items-center gap-2 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 rounded-lg transition-all">
+                    <div class="w-2 h-2 rounded-full ${getTaskStatusColor(task.status)}"></div>
+                    <span class="flex-1 truncate">${task.title}</span>
+                </div>
+            `).join('');
+
+            if (tasks.length > 5) {
+                container.innerHTML += `<p class="text-xs text-slate-400 italic px-3 py-2">+${tasks.length - 5} more</p>`;
+            }
+        }
+
+        // Toggle sections
+        function toggleSection(section) {
+            const list = document.getElementById(`${section}List`);
+            const icon = document.getElementById(`${section}Icon`);
+            
+            list.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // Navigation
+        function goToProjects() {
+            window.location.href = '/projects';
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to log out?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                window.location.href = '/users/login-form';
+            }
+        }
+
+        // Utilities
+        function getStatusColor(status) {
+            const colors = {
+                'en_cours': 'bg-blue-500',
+                'termine': 'bg-green-500',
+                'en_attente': 'bg-yellow-500'
+            };
+            return colors[status] || 'bg-slate-500';
+        }
+
+        function getTaskStatusColor(status) {
+            const colors = {
+                'todo': 'bg-slate-500',
+                'in_progress': 'bg-blue-500',
+                'done': 'bg-green-500'
+            };
+            return colors[status] || 'bg-slate-500';
+        }
+
+        // Toggle sidebar mobile
+        document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+            document.getElementById('sidebar').classList.toggle('-translate-x-full');
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notifications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': {
+                            50: '#E8F4F5',
+                            100: '#D1E9EB',
+                            200: '#A3D3D7',
+                            300: '#48C0C4',
+                            400: '#2C8E99',
+                            500: '#1A435E',
+                            600: '#0B243B',
+                            700: '#081B2C',
+                            800: '#05121D',
+                            900: '#020A0F'
+                        },
+                        'accent': {
+                            light: '#48C0C4',
+                            DEFAULT: '#2C8E99',
+                            dark: '#1A435E'
+                        },
+                        'neutral': {
+                            light: '#D1D9E0',
+                            DEFAULT: '#FFFFFF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-neutral-light/20 via-white to-primary-50 min-h-screen">
+{% include 'components/sidebar.html.twig' %}
+    
+    <!-- Toggle Sidebar Button  -->
+    <button id="sidebarToggle" class="fixed top-4 left-4 z-40 lg:hidden bg-primary-600 text-white p-3 rounded-lg shadow-lg hover:bg-primary-500 transition-all">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+
+    <!-- Main Content -->
+    <div class="lg:ml-72 transition-all duration-300">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-neutral-light/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <div class="flex items-center gap-3">
+                            <svg class="w-8 h-8 text-accent-light" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            <h1 class="text-3xl font-bold text-primary-600">Notification Center</h1>
+                        </div>
+                        <p class="mt-1 text-primary-500/80">All your notifications in one place</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <!-- Unread notification badge -->
+                        <div id="unreadBadge" class="hidden px-4 py-2 bg-accent-light/10 text-accent rounded-lg font-semibold border border-accent-light/20">
+                            <span id="unreadCount">0</span> unread
+                        </div>
+                        <button onclick="window.history.back()" class="px-4 py-2 bg-primary-50 hover:bg-primary-100 text-primary-600 rounded-lg transition-all flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                            </svg>
+                            Back
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4"></div>
+
+        <!-- Full notifications -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-xl shadow-md overflow-hidden border border-neutral-light/30">
+                <div class="p-6">
+                    <!-- Header with filters and actions -->
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-4">
+                        <h2 class="text-2xl font-bold text-primary-600">All Notifications</h2>
+                        
+                        <!-- Group actions -->
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <!-- Filters -->
+                            <div class="flex gap-2 border-r border-neutral-light pr-3">
+                                <button onclick="filterNotifications('all')" 
+                                        id="filterAll"
+                                        class="filter-btn px-3 py-2 bg-accent text-white rounded-lg text-sm font-medium transition-all">
+                                    All
+                                </button>
+                                <button onclick="filterNotifications('unread')" 
+                                        id="filterUnread"
+                                        class="filter-btn px-3 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 rounded-lg text-sm font-medium transition-all">
+                                    Unread
+                                </button>
+                                <button onclick="filterNotifications('read')" 
+                                        id="filterRead"
+                                        class="filter-btn px-3 py-2 bg-primary-50 text-primary-600 hover:bg-primary-100 rounded-lg text-sm font-medium transition-all">
+                                    Read
+                                </button>
+                            </div>
+                            
+                            <!-- Actions -->
+                            <button onclick="markAllAsRead()" class="px-4 py-2 bg-green-50 text-green-600 hover:bg-green-100 rounded-lg transition-all text-sm font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                                Mark All as Read
+                            </button>
+                            <button onclick="deleteAllNotifications()" class="px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all text-sm font-medium flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                                Delete All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Notifications list -->
+                    <div id="allNotificationsList">
+                        <div class="flex items-center justify-center py-12">
+                            <div class="w-12 h-12 border-4 border-accent-light border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let currentUserId = null;
+    let userToken = null;
+    let notifications = [];
+    let notificationCheckInterval = null;
+    let currentFilter = 'all';
+   
+function formatDate(dateString) {
+    // Si pas de date fournie
+    if (!dateString) {
+        console.warn(' [PAGE] No date provided');
+        return 'Just now';
+    }
+    
+    console.log(' [PAGE] Formatage de:', dateString, '(type:', typeof dateString + ')');
+    
+    try {
+        let date;
+        
+        // Si c'est déjà un timestamp Unix 
+        if (typeof dateString === 'number') {
+            date = new Date(dateString * 1000); // Multiplier par 1000 si timestamp en secondes
+            console.log(' [PAGE] Timestamp détecté:', date);
+        }
+        // Format ISO avec T 
+        else if (dateString.includes('T')) {
+            date = new Date(dateString);
+            console.log(' [PAGE] Format ISO détecté:', date);
+        }
+        // Format SQL 
+        else if (dateString.includes(' ')) {
+            // Remplacer l'espace par un T pour le parsing ISO
+            const isoFormat = dateString.replace(' ', 'T');
+            date = new Date(isoFormat);
+            console.log(' [PAGE] Format SQL détecté, converti en:', date);
+        }
+        // Autres formats
+        else {
+            date = new Date(dateString);
+            console.log(' [PAGE] Format générique:', date);
+        }
+        
+        // Vérifier validité
+        if (isNaN(date.getTime())) {
+            console.error(' [PAGE] Date invalide après parsing:', dateString);
+            return 'Invalid date';
+        }
+        
+        const now = new Date();
+        const diffInSeconds = Math.floor((now - date) / 1000);
+        
+        console.log(' [PAGE] Différence:', diffInSeconds, 'secondes');
+        console.log(' [PAGE] Date:', date.toISOString());
+        console.log(' [PAGE] Maintenant:', now.toISOString());
+        
+        // Si c'est dans le futur 
+        if (diffInSeconds < -120) {
+            console.warn(' [PAGE] Date dans le futur:', dateString, '- Diff:', diffInSeconds);
+            return 'Just now';
+        }
+        
+        // Moins de 1 minute
+        if (diffInSeconds >= -120 && diffInSeconds < 60) {
+            console.log(' [PAGE] → Just now');
+            return 'Just now';
+        }
+        
+        // Moins d'1 heure : minutes
+        if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            console.log(' [PAGE] →', minutes, 'min ago');
+            return `${minutes}min ago`;
+        }
+        
+        // Moins de 24 heures 
+        if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            console.log(' [PAGE] →', hours, 'h ago');
+            return `${hours}h ago`;
+        }
+        
+        // Plus de 24 heures
+        const options = {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        };
+        
+        const formatted = date.toLocaleDateString('en-US', options);
+        
+        // Ajouter l'année si différente
+        if (date.getFullYear() !== now.getFullYear()) {
+            console.log(' [PAGE] →', formatted + ', ' + date.getFullYear());
+            return `${formatted}, ${date.getFullYear()}`;
+        }
+        
+        console.log(' [PAGE] →', formatted);
+        return formatted;
+        
+    } catch (e) {
+        console.error(' [PAGE] Erreur de formatage:', e);
+        console.error(' [PAGE] Input:', dateString);
+        console.error(' [PAGE] Stack:', e.stack);
+        return 'Invalid date';
+    }
+}
+
+    
+    function waitForNotificationSync(callback, maxRetries = 20) {
+        let retries = 0;
+        
+        const checkInterval = setInterval(() => {
+            if (window.NotificationSync && window.NotificationSync.isInitialized()) {
+                clearInterval(checkInterval);
+                console.log(' [NOTIF-PAGE] NotificationSync prêt');
+                callback();
+            } else {
+                retries++;
+                console.log(` [NOTIF-PAGE] Attente NotificationSync... (${retries}/${maxRetries})`);
+                
+                if (retries >= maxRetries) {
+                    clearInterval(checkInterval);
+                    console.error(' [NOTIF-PAGE] Timeout - NotificationSync non disponible');
+                    callback();
+                }
+            }
+        }, 200);
+    }
+
+    // FONCTION DE MISE À JOUR DU BADGE
+    function updateSidebarNotificationBadge(forceCount = null) {
+        const unreadCount = forceCount !== null ? forceCount : notifications.filter(n => !n.is_read).length;
+        
+        console.log(' [NOTIF-PAGE] Mise à jour du badge avec count:', unreadCount);
+        
+        // Utiliser le système centralisé si disponible
+        if (window.NotificationSync) {
+            window.NotificationSync.setCount(unreadCount, 'notifications-page');
+            console.log(' [NOTIF-PAGE] Mise à jour via NotificationSync');
+        } else {
+            // Fallback si le système centralisé n'est pas chargé
+            console.warn(' [NOTIF-PAGE] NotificationSync non disponible - Fallback manuel');
+            
+            // Mettre à jour manuellement tous les badges
+            const badges = [
+                { id: 'notifBadgeIcon', name: 'Icône' },
+                { id: 'notifBadgeNavbar', name: 'Navbar' },
+                { id: 'notifBadgeSidebar', name: 'Sidebar' }
+            ];
+            
+            badges.forEach(({ id, name }) => {
+                const badge = document.getElementById(id);
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                        badge.classList.remove('hidden');
+                        console.log(` Badge ${name} mis à jour:`, unreadCount);
+                    } else {
+                        badge.classList.add('hidden');
+                        console.log(` Badge ${name} masqué`);
+                    }
+                }
+            });
+            
+            // Envoyer l'événement pour les autres composants
+            window.dispatchEvent(new CustomEvent('notificationsUpdated', { 
+                detail: { 
+                    unreadCount: unreadCount,
+                    source: 'notifications-page'
+                } 
+            }));
+        }
+    }
+
+    //FONCTION DE SYNCHRONISATION APRÈS ACTIONS 
+    function syncNotificationCount() {
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        console.log(' [NOTIF-PAGE] Synchronisation du compteur:', unreadCount);
+        updateSidebarNotificationBadge(unreadCount);
+    }
+
+    //  INITIALISATION AU CHARGEMENT DE LA PAGE 
+    document.addEventListener('DOMContentLoaded', async () => {
+        console.log(' [NOTIF-PAGE] Démarrage de la page notifications...');
+        
+        const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+        const userStr = localStorage.getItem('user');
+        
+        console.log('Token found:', token ? 'YES' : 'NO');
+        console.log('User data:', userStr ? 'YES' : 'NO');
+        
+        if (!token) {
+            console.error(' No token found in localStorage');
+            showMessage('Session expired. Redirecting...', 'error');
+            setTimeout(() => {
+                window.location.href = '/users/login-form';
+            }, 2000);
+            return;
+        }
+
+        let user;
+        try {
+            user = JSON.parse(userStr || '{}');
+        } catch (e) {
+            console.error('Error parsing user data:', e);
+            user = {};
+        }
+        
+        if (!user.id) {
+            console.error(' User ID missing');
+            showMessage('Invalid user data. Redirecting...', 'error');
+            setTimeout(() => {
+                window.location.href = '/users/login-form';
+            }, 2000);
+            return;
+        }
+
+        currentUserId = user.id;
+        userToken = token;
+
+        console.log('Configuration:', {
+            userId: currentUserId,
+            tokenLength: token.length
+        });
+
+        // Attendre que NotificationSync soit prêt avant de charger
+        waitForNotificationSync(async () => {
+            // Charger les notifications
+            await loadNotifications();
+            
+            // Vérification périodique (30 secondes)
+            notificationCheckInterval = setInterval(loadNotifications, 30000);
+            
+            console.log(' [NOTIF-PAGE] Page notifications initialisée avec succès');
+        });
+    });
+
+    // CHARGEMENT DES NOTIFICATIONS
+    async function loadNotifications() {
+        try {
+            console.log(' [NOTIF-PAGE] Chargement des notifications...');
+            
+            const response = await fetch('/notifications/me', {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            console.log('Response status:', response.status);
+
+            if (response.status === 401) {
+                console.error(' Invalid or expired token');
+                showMessage('Session expired. Please log in again.', 'error');
+                setTimeout(() => {
+                    localStorage.clear();
+                    window.location.href = '/users/login-form';
+                }, 2000);
+                return;
+            }
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('Response error:', errorText);
+                throw new Error(`Error ${response.status}: ${errorText}`);
+            }
+
+            notifications = await response.json();
+            console.log(' [NOTIF-PAGE] Notifications chargées:', notifications.length);
+
+            // Mettre à jour l'affichage local
+            updateUnreadCount();
+            displayAllNotifications();
+            
+            // Calculer et synchroniser le nombre de non-lus
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            console.log('[NOTIF-PAGE] Notifications non lues:', unreadCount);
+            
+            // Mettre à jour tous les badges via le système centralisé
+            updateSidebarNotificationBadge(unreadCount);
+
+        } catch (error) {
+            console.error(' Error loading notifications:', error);
+            showMessage('Unable to load notifications', 'error');
+            
+            const container = document.getElementById('allNotificationsList');
+            if (container) {
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <svg class="w-16 h-16 mx-auto text-red-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p class="text-lg text-red-600 font-medium mb-2">Loading Error</p>
+                        <p class="text-sm text-primary-500/70 mb-4">${error.message}</p>
+                        <button onclick="loadNotifications()" class="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-dark flex items-center gap-2 mx-auto">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                            </svg>
+                            Retry
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    
+    function updateUnreadCount() {
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        const badge = document.getElementById('unreadBadge');
+        const countElement = document.getElementById('unreadCount');
+        
+        if (badge && countElement) {
+            if (unreadCount > 0) {
+                badge.classList.remove('hidden');
+                countElement.textContent = unreadCount;
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+        
+        console.log(' [NOTIF-PAGE] Badge local mis à jour:', unreadCount);
+    }
+
+    // FILTRAGE DES NOTIFICATIONS 
+    function filterNotifications(filter) {
+        currentFilter = filter;
+        console.log(' [NOTIF-PAGE] Filtre appliqué:', filter);
+        
+        // Mettre à jour les boutons de filtre
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.classList.remove('bg-accent', 'text-white');
+            btn.classList.add('bg-primary-50', 'text-primary-600');
+        });
+        
+        const activeBtn = document.getElementById(`filter${filter.charAt(0).toUpperCase() + filter.slice(1)}`);
+        if (activeBtn) {
+            activeBtn.classList.remove('bg-primary-50', 'text-primary-600');
+            activeBtn.classList.add('bg-accent', 'text-white');
+        }
+        
+        displayAllNotifications();
+    }
+    
+
+    //AFFICHAGE DES NOTIFICATIONS
+    function displayAllNotifications() {
+        const container = document.getElementById('allNotificationsList');
+        
+        let filteredNotifications = notifications;
+        if (currentFilter === 'unread') {
+            filteredNotifications = notifications.filter(n => !n.is_read);
+        } else if (currentFilter === 'read') {
+            filteredNotifications = notifications.filter(n => n.is_read);
+        }
+        
+        console.log(' [NOTIF-PAGE] Affichage de', filteredNotifications.length, 'notifications (filtre:', currentFilter + ')');
+        
+        if (filteredNotifications.length === 0) {
+            const emptyMessage = currentFilter === 'unread' 
+                ? 'No unread notifications' 
+                : currentFilter === 'read'
+                ? 'No read notifications'
+                : 'No notifications';
+                
+            container.innerHTML = `
+                <div class="text-center py-12">
+                    <svg class="w-20 h-20 mx-auto text-primary-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <p class="text-lg text-primary-600 font-medium mb-2">${emptyMessage}</p>
+                    <p class="text-sm text-primary-500/70">You'll be notified when something happens</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="space-y-3">
+                ${filteredNotifications.map(notif => createNotificationCard(notif)).join('')}
+            </div>
+        `;
+    }
+    
+    
+
+    //  CRÉATION D'UNE CARTE DE NOTIFICATION
+    function createNotificationCard(notif) {
+        const typeIcons = {
+            'task_assigned': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>`,
+            'task_completed': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            'task_updated': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>`,
+            'task_status_changed': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>`,
+            'project_update': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>`,
+            'deadline_soon': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>`,
+            'comment': `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>`
+        };
+
+        const typeColors = {
+            'task_assigned': 'bg-accent-light/10 border-accent-light/30 text-accent',
+            'task_completed': 'bg-green-50 border-green-200 text-green-700',
+            'task_updated': 'bg-yellow-50 border-yellow-200 text-yellow-700',
+            'task_status_changed': 'bg-orange-50 border-orange-200 text-orange-700',
+            'project_update': 'bg-purple-50 border-purple-200 text-purple-700',
+            'deadline_soon': 'bg-red-50 border-red-200 text-red-700',
+            'comment': 'bg-primary-50 border-primary-200 text-primary-600'
+        };
+
+        const icon = typeIcons[notif.type] || `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`;
+        const colorClass = typeColors[notif.type] || 'bg-primary-50 border-primary-200 text-primary-600';
+        
+        const unreadStyle = !notif.is_read ? 'border-l-4 border-l-accent-light font-medium' : 'opacity-75';
+
+        return `
+            <div class="border ${colorClass} ${unreadStyle} p-4 rounded-lg hover:shadow-md transition-all cursor-pointer" 
+                 onclick="handleNotificationClick(${notif.id})">
+                <div class="flex items-start gap-3">
+                    ${!notif.is_read ? '<div class="w-2 h-2 bg-accent-light rounded-full mt-2 shrink-0"></div>' : '<div class="w-2 shrink-0"></div>'}
+                    
+                    <div class="shrink-0">${icon}</div>
+                    
+                    <div class="flex-1 min-w-0">
+                        <p class="text-base leading-snug ${!notif.is_read ? 'font-semibold text-primary-700' : 'text-primary-600'}">${notif.message}</p>
+                        <div class="flex items-center gap-2 mt-2 flex-wrap">
+                            <span class="text-xs text-primary-500/70">${formatDate(notif.created_at)}</span>
+                            ${notif.sender_name ? `<span class="text-xs text-primary-400">• by ${notif.sender_name}</span>` : ''}
+                            ${notif.project_title ? `<span class="text-xs text-primary-400">• ${notif.project_title}</span>` : ''}
+                            ${!notif.is_read ? '<span class="px-2 py-0.5 bg-accent-light/20 text-accent text-xs rounded-full font-medium">New</span>' : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center gap-1 shrink-0">
+                        ${!notif.is_read ? `
+                            <button onclick="markAsRead(${notif.id}, event)" 
+                                    class="p-1 text-green-600 hover:bg-green-50 rounded transition" 
+                                    title="Mark as read">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                </svg>
+                            </button>
+                        ` : ''}
+                        <button onclick="deleteNotification(${notif.id}, event)" 
+                                class="p-1 text-red-600 hover:bg-red-50 rounded transition" 
+                                title="Delete">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    //  GESTION DU CLIC SUR UNE NOTIFICATION 
+    async function handleNotificationClick(notificationId) {
+        const notif = notifications.find(n => n.id === notificationId);
+        if (!notif) return;
+
+        console.log(' [NOTIF-PAGE] Clic sur notification:', notificationId);
+
+        // Marquer comme lu si non lu
+        if (!notif.is_read) {
+            await markAsRead(notificationId);
+        }
+
+        // Redirection selon le type
+        if (notif.task_id) {
+            try {
+                const taskResponse = await fetch(`/tasks/${notif.task_id}`, {
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (taskResponse.ok) {
+                    const task = await taskResponse.json();
+                    console.log(' [NOTIF-PAGE] Redirection vers tâche:', task.project_id);
+                    window.location.href = `/projects/${task.project_id}/tasks`;
+                }
+            } catch (error) {
+                console.error('Error retrieving task:', error);
+            }
+        } else if (notif.project_id) {
+            console.log(' [NOTIF-PAGE] Redirection vers projet:', notif.project_id);
+            window.location.href = `/projects/${notif.project_id}/tasks`;
+        }
+    }
+
+    //MARQUER UNE NOTIFICATION COMME LUE
+    async function markAsRead(notificationId, event = null) {
+        if (event) {
+            event.stopPropagation();
+        }
+
+        console.log(' [NOTIF-PAGE] Marquage comme lu:', notificationId);
+
+        try {
+            const response = await fetch(`/notifications/mark-read/${notificationId}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Marking error');
+
+            showMessage('Notification marked as read', 'success');
+            
+            // Recharger les notifications
+            await loadNotifications();
+
+        } catch (error) {
+            console.error(' [NOTIF-PAGE] Erreur marquage:', error);
+            showMessage(error.message, 'error');
+        }
+    }
+
+    //  MARQUER TOUTES LES NOTIFICATIONS COMME LUES 
+    async function markAllAsRead() {
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        
+        console.log(' [NOTIF-PAGE] Tentative de marquage global:', unreadCount, 'notifications');
+        
+        if (unreadCount === 0) {
+            showMessage('No unread notifications', 'info');
+            return;
+        }
+
+        if (!confirm(`Mark ${unreadCount} unread notifications as read?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/notifications/mark-all-read', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Marking error');
+
+            showMessage('All notifications have been marked as read', 'success');
+            
+            // Recharger les notifications
+            await loadNotifications();
+            
+            console.log(' [NOTIF-PAGE] Toutes les notifications marquées comme lues');
+            
+        } catch (error) {
+            console.error(' [NOTIF-PAGE] Erreur marquage global:', error);
+            showMessage('Error during marking', 'error');
+        }
+    }
+
+    // SUPPRIMER UNE NOTIFICATION 
+    async function deleteNotification(notificationId, event = null) {
+        if (event) {
+            event.stopPropagation();
+        }
+
+        console.log(' [NOTIF-PAGE] Suppression notification:', notificationId);
+
+        try {
+            const response = await fetch(`/notifications/delete/${notificationId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Deletion error');
+
+            showMessage('Notification deleted', 'success');
+            
+            // Recharger les notifications
+            await loadNotifications();
+
+        } catch (error) {
+            console.error(' [NOTIF-PAGE] Erreur suppression:', error);
+            showMessage(error.message, 'error');
+        }
+    }
+
+    //SUPPRIMER TOUTES LES NOTIFICATIONS
+    async function deleteAllNotifications() {
+        console.log(' [NOTIF-PAGE] Tentative de suppression globale:', notifications.length, 'notifications');
+        
+        if (notifications.length === 0) {
+            showMessage('No notifications to delete', 'info');
+            return;
+        }
+
+        if (!confirm(`Do you really want to delete all ${notifications.length} notifications?`)) {
+            return;
+        }
+
+        try {
+            const response = await fetch('/notifications/delete-all', {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${userToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) throw new Error('Deletion error');
+
+            showMessage('All notifications have been deleted', 'success');
+            
+            // Recharger les notifications
+            await loadNotifications();
+            
+            console.log(' [NOTIF-PAGE] Toutes les notifications supprimées');
+            
+        } catch (error) {
+            console.error(' [NOTIF-PAGE] Erreur suppression globale:', error);
+            showMessage('Error during deletion', 'error');
+        }
+    }
+
+
+
+    // AFFICHAGE DES MESSAGES 
+    function showMessage(message, type) {
+        const container = document.getElementById('messageContainer');
+        if (!container) {
+            console.warn(' [NOTIF-PAGE] Message container not found');
+            return;
+        }
+        
+        const colors = {
+            'success': 'bg-green-50 border-green-200 text-green-700',
+            'error': 'bg-red-50 border-red-200 text-red-700',
+            'info': 'bg-accent-light/10 border-accent-light/30 text-accent'
+        };
+        const icons = {
+            'success': 'M5 13l4 4L19 7',
+            'error': 'M6 18L18 6M6 6l12 12',
+            'info': 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+        };
+        
+        const bgColor = colors[type] || colors.info;
+        const icon = icons[type] || icons.info;
+        
+        container.innerHTML = `
+            <div class="${bgColor} border px-4 py-3 rounded-lg flex items-center gap-2 shadow-sm animate-fade-in">
+                <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="${icon}"/>
+                </svg>
+                <span class="font-medium">${message}</span>
+            </div>
+        `;
+        
+        console.log(` [NOTIF-PAGE] Message affiché (${type}):`, message);
+        
+        // Effacer le message après 4 secondes
+        setTimeout(() => {
+            container.innerHTML = '';
+        }, 4000);
+    }
+
+    //  NETTOYAGE AVANT FERMETURE
+    window.addEventListener('beforeunload', () => {
+        if (notificationCheckInterval) {
+            clearInterval(notificationCheckInterval);
+            console.log(' [NOTIF-PAGE] Intervalle de vérification nettoyé');
+        }
+    });
+
+    // GESTION DU TOGGLE SIDEBAR 
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) {
+                sidebar.classList.toggle('-translate-x-full');
+                console.log(' [NOTIF-PAGE] Toggle sidebar mobile');
+            }
+        });
+    }
+
+  
+    window.filterNotifications = filterNotifications;
+    window.markAllAsRead = markAllAsRead;
+    window.deleteAllNotifications = deleteAllNotifications;
+    window.handleNotificationClick = handleNotificationClick;
+    window.markAsRead = markAsRead;
+    window.deleteNotification = deleteNotification;
+    window.loadNotifications = loadNotifications;
+    window.syncNotificationCount = syncNotificationCount;
+
+    console.log(' [NOTIF-PAGE] Script de notifications chargé et prêt');
+</script>
+
+    <style>
+        @keyframes fade-in {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+
+        #allNotificationsList::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #allNotificationsList::-webkit-scrollbar-track {
+            background: #E8F4F5;
+        }
+
+        #allNotificationsList::-webkit-scrollbar-thumb {
+            background: #A3D3D7;
+            border-radius: 3px;
+        }
+
+        #allNotificationsList::-webkit-scrollbar-thumb:hover {
+            background: #48C0C4;
+        }
+    </style>
+</body>
+</html>

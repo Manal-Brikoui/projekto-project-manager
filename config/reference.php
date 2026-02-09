@@ -1104,6 +1104,9 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *             filter?: scalar|null, // Default: "({uid_key}={user_identifier})"
  *             password_attribute?: scalar|null, // Default: null
  *         },
+ *         lexik_jwt?: array{
+ *             class?: scalar|null, // Default: "Lexik\\Bundle\\JWTAuthenticationBundle\\Security\\User\\JWTUser"
+ *         },
  *     }>,
  *     firewalls: array<string, array{ // Default: []
  *         pattern?: scalar|null,
@@ -1161,6 +1164,10 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         remote_user?: array{
  *             provider?: scalar|null,
  *             user?: scalar|null, // Default: "REMOTE_USER"
+ *         },
+ *         jwt?: array{
+ *             provider?: scalar|null, // Default: null
+ *             authenticator?: scalar|null, // Default: "lexik_jwt_authentication.security.jwt_authenticator"
  *         },
  *         login_link?: array{
  *             check_route: scalar|null, // Route that will validate the login link - e.g. "app_login_link_verify".
@@ -1509,6 +1516,91 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     generate_final_classes?: bool, // Default: true
  *     generate_final_entities?: bool, // Default: false
  * }
+ * @psalm-type LexikJwtAuthenticationConfig = array{
+ *     private_key_path?: scalar|null, // Deprecated: The "lexik_jwt_authentication.private_key_path.private_key_path" configuration key is deprecated since version 2.5. Use "lexik_jwt_authentication.private_key_path.secret_key" instead. // Default: null
+ *     public_key_path?: scalar|null, // Deprecated: The "lexik_jwt_authentication.public_key_path.public_key_path" configuration key is deprecated since version 2.5. Use "lexik_jwt_authentication.public_key_path.public_key" instead. // Default: null
+ *     public_key?: scalar|null, // The key used to sign tokens (useless for HMAC). If not set, the key will be automatically computed from the secret key. // Default: null
+ *     additional_public_keys?: list<scalar|null>,
+ *     secret_key?: scalar|null, // The key used to sign tokens. It can be a raw secret (for HMAC), a raw RSA/ECDSA key or the path to a file itself being plaintext or PEM. // Default: null
+ *     pass_phrase?: scalar|null, // The key passphrase (useless for HMAC) // Default: ""
+ *     token_ttl?: scalar|null, // Default: 3600
+ *     allow_no_expiration?: bool, // Allow tokens without "exp" claim (i.e. indefinitely valid, no lifetime) to be considered valid. Caution: usage of this should be rare. // Default: false
+ *     clock_skew?: scalar|null, // Default: 0
+ *     encoder?: array{
+ *         service?: scalar|null, // Default: "lexik_jwt_authentication.encoder.lcobucci"
+ *         signature_algorithm?: scalar|null, // Default: "RS256"
+ *         crypto_engine?: "openssl"|"phpseclib", // Deprecated: The "lexik_jwt_authentication.encoder.crypto_engine.crypto_engine" configuration key is deprecated since version 2.5, built-in encoders support OpenSSL only // Default: "openssl"
+ *     },
+ *     user_identity_field?: scalar|null, // Deprecated: The "lexik_jwt_authentication.user_identity_field.user_identity_field" configuration key is deprecated since version 2.16, use "lexik_jwt_authentication.user_identity_field.user_id_claim" or implement "Symfony\Component\Security\Core\User\UserInterface::getUserIdentifier()" instead. // Default: "username"
+ *     user_id_claim?: scalar|null, // If null, the user ID claim will have the same name as the one defined by the option "user_identity_field" // Default: null
+ *     token_extractors?: array{
+ *         authorization_header?: bool|array{
+ *             enabled?: bool, // Default: true
+ *             prefix?: scalar|null, // Default: "Bearer"
+ *             name?: scalar|null, // Default: "Authorization"
+ *         },
+ *         cookie?: bool|array{
+ *             enabled?: bool, // Default: false
+ *             name?: scalar|null, // Default: "BEARER"
+ *         },
+ *         query_parameter?: bool|array{
+ *             enabled?: bool, // Default: false
+ *             name?: scalar|null, // Default: "bearer"
+ *         },
+ *         split_cookie?: bool|array{
+ *             enabled?: bool, // Default: false
+ *             cookies?: list<scalar|null>,
+ *         },
+ *     },
+ *     remove_token_from_body_when_cookies_used?: scalar|null, // Default: true
+ *     set_cookies?: array<string, array{ // Default: []
+ *         lifetime?: scalar|null, // The cookie lifetime. If null, the "token_ttl" option value will be used // Default: null
+ *         samesite?: "none"|"lax"|"strict", // Default: "lax"
+ *         path?: scalar|null, // Default: "/"
+ *         domain?: scalar|null, // Default: null
+ *         secure?: scalar|null, // Default: true
+ *         httpOnly?: scalar|null, // Default: true
+ *         partitioned?: scalar|null, // Default: false
+ *         split?: list<scalar|null>,
+ *     }>,
+ *     api_platform?: bool|array{ // API Platform compatibility: add check_path in OpenAPI documentation.
+ *         enabled?: bool, // Default: false
+ *         check_path?: scalar|null, // The login check path to add in OpenAPI. // Default: null
+ *         username_path?: scalar|null, // The path to the username in the JSON body. // Default: null
+ *         password_path?: scalar|null, // The path to the password in the JSON body. // Default: null
+ *     },
+ *     access_token_issuance?: bool|array{
+ *         enabled?: bool, // Default: false
+ *         signature?: array{
+ *             algorithm: scalar|null, // The algorithm use to sign the access tokens.
+ *             key: scalar|null, // The signature key. It shall be JWK encoded.
+ *         },
+ *         encryption?: bool|array{
+ *             enabled?: bool, // Default: false
+ *             key_encryption_algorithm: scalar|null, // The key encryption algorithm is used to encrypt the token.
+ *             content_encryption_algorithm: scalar|null, // The key encryption algorithm is used to encrypt the token.
+ *             key: scalar|null, // The encryption key. It shall be JWK encoded.
+ *         },
+ *     },
+ *     access_token_verification?: bool|array{
+ *         enabled?: bool, // Default: false
+ *         signature?: array{
+ *             header_checkers?: list<scalar|null>,
+ *             claim_checkers?: list<scalar|null>,
+ *             mandatory_claims?: list<scalar|null>,
+ *             allowed_algorithms?: list<scalar|null>,
+ *             keyset: scalar|null, // The signature keyset. It shall be JWKSet encoded.
+ *         },
+ *         encryption?: bool|array{
+ *             enabled?: bool, // Default: false
+ *             continue_on_decryption_failure?: bool, // If enable, non-encrypted tokens or tokens that failed during decryption or verification processes are accepted. // Default: false
+ *             header_checkers?: list<scalar|null>,
+ *             allowed_key_encryption_algorithms?: list<scalar|null>,
+ *             allowed_content_encryption_algorithms?: list<scalar|null>,
+ *             keyset: scalar|null, // The encryption keyset. It shall be JWKSet encoded.
+ *         },
+ *     },
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -1522,6 +1614,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *     twig_extra?: TwigExtraConfig,
  *     security?: SecurityConfig,
  *     monolog?: MonologConfig,
+ *     lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1538,6 +1631,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
  *         maker?: MakerConfig,
+ *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -1552,6 +1646,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         twig_extra?: TwigExtraConfig,
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
+ *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1567,6 +1662,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
  *         twig_extra?: TwigExtraConfig,
  *         security?: SecurityConfig,
  *         monolog?: MonologConfig,
+ *         lexik_jwt_authentication?: LexikJwtAuthenticationConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,

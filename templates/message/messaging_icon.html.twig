@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Messagerie Thoughtful</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'thoughtful-navy': '#0B243B',
+                        'thoughtful-blue': '#1A435E',
+                        'thoughtful-teal': '#2C8E99',
+                        'thoughtful-bright': '#48C0C4',
+                        'thoughtful-silver': '#D1D9E0',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 p-8">
+
+<!-- Bouton Messagerie -->
+<button onclick="openMessagingModal()" 
+        class="relative p-3 bg-white hover:bg-thoughtful-silver/30 rounded-lg transition-all hover:scale-105 group shadow-md border border-thoughtful-silver"
+        title="Messages">
+    <svg class="w-6 h-6 text-thoughtful-blue group-hover:text-thoughtful-bright transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+    </svg>
+    <!-- Badge compteur messages non lus -->
+    <span id="messageBadgeIcon" class="hidden absolute -top-1 -right-1 w-5 h-5 bg-thoughtful-bright text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse shadow-lg">0</span>
+</button>
+
+<!-- Modal de messagerie -->
+<div id="messagingModal" class="hidden fixed inset-0 z-50 overflow-hidden">
+    <!-- Overlay -->
+    <div class="fixed inset-0 bg-thoughtful-navy/60 backdrop-blur-sm transition-opacity" onclick="closeMessagingModal()"></div>
+    
+    <!-- Panel du modal -->
+    <div id="messagingPanel" class="fixed inset-y-0 right-0 max-w-4xl w-full bg-white shadow-2xl transform translate-x-full transition-transform duration-300 flex">
+        
+        <!-- Liste des conversations -->
+        <div class="w-80 border-r border-thoughtful-silver flex flex-col bg-gray-50">
+            <!-- Header -->
+            <div class="bg-gradient-to-r from-thoughtful-teal to-thoughtful-bright text-white p-4">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-bold flex items-center gap-2">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/>
+                        </svg>
+                        Messages
+                    </h2>
+                    <button onclick="closeMessagingModal()" class="p-1 hover:bg-white/10 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <!-- Onglets -->
+                <div class="flex gap-2 mb-3">
+                    <button onclick="showTab('conversations')" id="tabConversations" class="flex-1 px-3 py-1.5 bg-white/20 rounded-lg text-sm font-medium transition-all">
+                        Conversations
+                    </button>
+                    <button onclick="showTab('users')" id="tabUsers" class="flex-1 px-3 py-1.5 bg-white/10 rounded-lg text-sm font-medium transition-all">
+                        All Users
+                    </button>
+                </div>
+                
+                <!-- Recherche -->
+                <div class="relative">
+                    <input 
+                        type="text" 
+                        id="userSearch" 
+                        placeholder="Search..." 
+                        class="w-full px-3 py-2 pl-9 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/70 focus:bg-white/30 focus:outline-none text-sm"
+                        oninput="handleSearch()"
+                    >
+                    <svg class="w-4 h-4 absolute left-3 top-2.5 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Liste des conversations -->
+            <div id="conversationsList" class="flex-1 overflow-y-auto">
+                <div class="flex items-center justify-center py-12">
+                    <div class="w-10 h-10 border-4 border-thoughtful-bright border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            </div>
+
+            <!-- Liste de tous les utilisateurs -->
+            <div id="usersList" class="hidden flex-1 overflow-y-auto">
+                <div class="flex items-center justify-center py-12">
+                    <div class="w-10 h-10 border-4 border-thoughtful-bright border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Zone de conversation -->
+        <div class="flex-1 flex flex-col">
+            <!-- État vide -->
+            <div id="emptyState" class="flex-1 flex items-center justify-center bg-gray-50">
+                <div class="text-center px-6">
+                    <svg class="w-24 h-24 mx-auto text-thoughtful-silver mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <h3 class="text-xl font-semibold text-thoughtful-navy mb-2">No conversation selected</h3>
+                    <p class="text-thoughtful-blue text-sm">Choose a conversation or start a new one</p>
+                </div>
+            </div>
+
+            <!-- Conversation active -->
+            <div id="conversationView" class="hidden flex-1 flex flex-col">
+                <!-- Header conversation -->
+                <div class="bg-white border-b border-thoughtful-silver p-4 flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-thoughtful-teal to-thoughtful-bright flex items-center justify-center text-white font-bold">
+                        <span id="conversationUserInitial">?</span>
+                    </div>
+                    <div class="flex-1">
+                        <h3 id="conversationUserName" class="font-semibold text-thoughtful-navy">User</h3>
+                        <p id="conversationUserEmail" class="text-xs text-thoughtful-blue">email@example.com</p>
+                    </div>
+                    <button onclick="closeConversation()" class="p-2 hover:bg-thoughtful-silver/30 rounded-lg transition-colors">
+                        <svg class="w-5 h-5 text-thoughtful-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Messages -->
+                <div id="messagesContainer" class="flex-1 overflow-y-auto p-4 bg-gray-50 space-y-3">
+                    <!-- Messages dynamiques -->
+                </div>
+
+                <!-- Input message -->
+                <div class="bg-white border-t border-thoughtful-silver p-4">
+                    <form id="messageForm" onsubmit="sendMessage(event)" class="flex gap-2">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Write a message..." 
+                            class="flex-1 px-4 py-2 border border-thoughtful-silver rounded-lg focus:ring-2 focus:ring-thoughtful-bright focus:border-transparent"
+                            required
+                        >
+                        <button type="submit" class="px-6 py-2 bg-thoughtful-bright text-white rounded-lg hover:bg-thoughtful-teal transition-all font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            send
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    console.log('Initialisation du système de messagerie...');
+    
+    let messagingToken = null;
+    let currentUser = null;
+    let conversations = [];
+    let allUsers = [];
+    let currentConversationUser = null;
+    let messages = [];
+    let messageUpdateInterval = null;
+    let searchTimeout = null;
+    let isAuthenticated = false;
+    let currentTab = 'conversations';
+
+    // INITIALISATION 
+    async function initMessaging() {
+        console.log('Vérification des credentials...');
+        
+        const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+        const userStr = localStorage.getItem('user');
+        
+        if (!token || !userStr) {
+            console.warn('Pas de token/user pour la messagerie');
+            return;
+        }
+
+        messagingToken = token;
+        
+        try {
+            currentUser = JSON.parse(userStr);
+        } catch (e) {
+            console.error('Erreur parsing user:', e);
+            return;
+        }
+        
+        console.log('User chargé:', currentUser.email || currentUser.username);
+        
+        const isValid = await verifyToken();
+        if (!isValid) {
+            console.error('Token invalide');
+            return;
+        }
+
+        isAuthenticated = true;
+        updateMessageBadge();
+        messageUpdateInterval = setInterval(updateMessageBadge, 30000);
+        
+        console.log('Messagerie initialisée');
+    }
+
+    // VÉRIFICATION TOKEN 
+    async function verifyToken() {
+        try {
+            const response = await fetch('/messages/unread-count', {
+                headers: {
+                    'Authorization': `Bearer ${messagingToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.status === 401) {
+                console.error('Token invalide');
+                return false;
+            }
+
+            return response.ok;
+        } catch (error) {
+            console.error('Erreur vérification token:', error);
+            return false;
+        }
+    }
+
+    //  BADGE 
+    async function updateMessageBadge() {
+        if (!isAuthenticated) return;
+
+        try {
+            const response = await fetch('/messages/unread-count', {
+                headers: {
+                    'Authorization': `Bearer ${messagingToken}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const badge = document.getElementById('messageBadgeIcon');
+                
+                if (badge) {
+                    if (data.count > 0) {
+                        badge.classList.remove('hidden');
+                        badge.textContent = data.count > 99 ? '99+' : data.count;
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            }
+        } catch (error) {
+            console.error('Erreur badge:', error);
+        }
+    }
+
+    // REQUÊTE SÉCURISÉE 
+    async function secureFetch(url, options = {}) {
+        if (!isAuthenticated) throw new Error('Non authentifié');
+
+        const response = await fetch(url, {
+            ...options,
+            headers: {
+                'Authorization': `Bearer ${messagingToken}`,
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+
+        if (response.status === 401) {
+            isAuthenticated = false;
+            throw new Error('Session expirée');
+        }
+
+        return response;
+    }
+
+    //  ONGLETS 
+    window.showTab = function(tab) {
+        currentTab = tab;
+        
+        const conversationsTab = document.getElementById('tabConversations');
+        const usersTab = document.getElementById('tabUsers');
+        const conversationsList = document.getElementById('conversationsList');
+        const usersList = document.getElementById('usersList');
+        
+        if (tab === 'conversations') {
+            conversationsTab.classList.add('bg-white/20');
+            conversationsTab.classList.remove('bg-white/10');
+            usersTab.classList.add('bg-white/10');
+            usersTab.classList.remove('bg-white/20');
+            
+            conversationsList.classList.remove('hidden');
+            usersList.classList.add('hidden');
+        } else {
+            usersTab.classList.add('bg-white/20');
+            usersTab.classList.remove('bg-white/10');
+            conversationsTab.classList.add('bg-white/10');
+            conversationsTab.classList.remove('bg-white/20');
+            
+            conversationsList.classList.add('hidden');
+            usersList.classList.remove('hidden');
+            
+            if (allUsers.length === 0) {
+                loadAllUsers();
+            }
+        }
+    };
+
+    //  OUVERTURE MODAL
+    window.openMessagingModal = async function() {
+        if (!isAuthenticated) {
+            showAlert('Please log in to access messaging.');
+            return;
+        }
+
+        const modal = document.getElementById('messagingModal');
+        const panel = document.getElementById('messagingPanel');
+        
+        modal.classList.remove('hidden');
+        setTimeout(() => panel.classList.remove('translate-x-full'), 10);
+        
+        await loadConversations();
+    };
+
+    window.closeMessagingModal = function() {
+        const modal = document.getElementById('messagingModal');
+        const panel = document.getElementById('messagingPanel');
+        
+        panel.classList.add('translate-x-full');
+        setTimeout(() => modal.classList.add('hidden'), 300);
+        
+        closeConversation();
+    };
+
+    //  CHARGEMENT CONVERSATIONS
+    async function loadConversations() {
+        try {
+            const response = await secureFetch('/messages/conversations');
+
+            if (response.ok) {
+                conversations = await response.json();
+                console.log('Conversations chargées:', conversations.length);
+                displayConversations();
+            }
+        } catch (error) {
+            console.error('Erreur conversations:', error);
+        }
+    }
+
+    function displayConversations() {
+        const container = document.getElementById('conversationsList');
+        
+        if (conversations.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 px-4">
+                    <svg class="w-16 h-16 mx-auto text-thoughtful-silver mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <p class="text-sm text-thoughtful-blue mb-2">No conversations</p>
+                    <button onclick="showTab('users')" class="text-sm text-thoughtful-bright hover:underline font-medium">
+                        View all users
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = conversations.map(conv => `
+            <div onclick="openConversation(${conv.id})" 
+                 class="p-3 hover:bg-white border-b border-thoughtful-silver cursor-pointer transition-colors ${conv.unreadCount > 0 ? 'bg-thoughtful-bright/10' : ''}">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-thoughtful-teal to-thoughtful-bright flex items-center justify-center text-white font-bold shrink-0">
+                        ${conv.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h4 class="font-semibold text-thoughtful-navy text-sm truncate">${escapeHtml(conv.name)}</h4>
+                            ${conv.unreadCount > 0 ? `
+                                <span class="px-2 py-0.5 bg-thoughtful-bright text-white text-xs font-bold rounded-full">${conv.unreadCount}</span>
+                            ` : ''}
+                        </div>
+                        <p class="text-xs text-thoughtful-blue truncate">${escapeHtml(conv.email)}</p>
+                        ${conv.lastMessage ? `
+                            <p class="text-xs text-thoughtful-blue/70 truncate mt-1">
+                                ${conv.lastMessage.isFromMe ? 'You:  ' : ''}${escapeHtml(conv.lastMessage.content)}
+                            </p>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // CHARGEMENT TOUS LES USERS 
+    async function loadAllUsers() {
+        console.log('Chargement de tous les utilisateurs...');
+        
+        const container = document.getElementById('usersList');
+        container.innerHTML = `
+            <div class="flex items-center justify-center py-12">
+                <div class="w-10 h-10 border-4 border-thoughtful-bright border-t-transparent rounded-full animate-spin"></div>
+            </div>
+        `;
+        
+        try {
+            const response = await secureFetch('/users/');
+
+            if (response.ok) {
+                const users = await response.json();
+                
+                allUsers = users.filter(u => u.id !== currentUser.id);
+                
+                console.log('Utilisateurs chargés:', allUsers.length);
+                displayAllUsers(allUsers);
+            } else {
+                console.error('Erreur chargement users:', response.status);
+                container.innerHTML = `
+                    <div class="text-center py-8 px-4">
+                        <svg class="w-12 h-12 mx-auto text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        <p class="text-sm text-red-600">Loading error</p>
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Erreur users:', error);
+            container.innerHTML = `
+                <div class="text-center py-8 px-4">
+                    <svg class="w-12 h-12 mx-auto text-red-500 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <p class="text-sm text-red-600">Error: ${error.message}</p>
+                </div>
+            `;
+        }
+    }
+
+    function displayAllUsers(users) {
+        const container = document.getElementById('usersList');
+        
+        if (users.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 px-4">
+                    <svg class="w-16 h-16 mx-auto text-thoughtful-silver mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <p class="text-sm text-thoughtful-blue">No users found</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = users.map(user => `
+            <div onclick="startConversationWith(${user.id}, '${escapeHtml(user.name)}', '${escapeHtml(user.email)}')" 
+                 class="p-3 hover:bg-white border-b border-thoughtful-silver cursor-pointer transition-colors">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-thoughtful-blue to-thoughtful-teal flex items-center justify-center text-white font-bold">
+                        ${user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-thoughtful-navy text-sm truncate">${escapeHtml(user.name)}</h4>
+                        <p class="text-xs text-thoughtful-blue truncate">${escapeHtml(user.email)}</p>
+                        ${user.role ? `<span class="text-xs text-thoughtful-bright font-medium">${escapeHtml(user.role)}</span>` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    //  RECHERCHE
+    window.handleSearch = function() {
+        clearTimeout(searchTimeout);
+        const query = document.getElementById('userSearch').value.trim().toLowerCase();
+        
+        searchTimeout = setTimeout(() => {
+            if (currentTab === 'conversations') {
+                if (!query) {
+                    displayConversations();
+                } else {
+                    const filtered = conversations.filter(c => 
+                        c.name.toLowerCase().includes(query) || 
+                        c.email.toLowerCase().includes(query)
+                    );
+                    displayFilteredConversations(filtered);
+                }
+            } else {
+                if (!query) {
+                    displayAllUsers(allUsers);
+                } else {
+                    const filtered = allUsers.filter(u => 
+                        u.name.toLowerCase().includes(query) || 
+                        u.email.toLowerCase().includes(query)
+                    );
+                    displayAllUsers(filtered);
+                }
+            }
+        }, 300);
+    };
+
+    function displayFilteredConversations(filtered) {
+        const container = document.getElementById('conversationsList');
+        
+        if (filtered.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8 px-4">
+                    <svg class="w-12 h-12 mx-auto text-thoughtful-silver mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <p class="text-sm text-thoughtful-blue">No results</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = filtered.map(conv => `
+            <div onclick="openConversation(${conv.id})" 
+                 class="p-3 hover:bg-white border-b border-thoughtful-silver cursor-pointer transition-colors">
+                <div class="flex items-start gap-3">
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-br from-thoughtful-teal to-thoughtful-bright flex items-center justify-center text-white font-bold shrink-0">
+                        ${conv.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-semibold text-thoughtful-navy text-sm truncate">${escapeHtml(conv.name)}</h4>
+                        <p class="text-xs text-thoughtful-blue truncate">${escapeHtml(conv.email)}</p>
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // CONVERSATION 
+    window.openConversation = async function(userId) {
+        let user = conversations.find(c => c.id === userId);
+        
+        if (!user) {
+            user = allUsers.find(u => u.id === userId);
+        }
+        
+        if (!user) {
+            console.error('Utilisateur introuvable');
+            return;
+        }
+
+        currentConversationUser = user;
+
+        document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById('conversationView').classList.remove('hidden');
+        
+        document.getElementById('conversationUserInitial').textContent = user.name.charAt(0).toUpperCase();
+        document.getElementById('conversationUserName').textContent = user.name;
+        document.getElementById('conversationUserEmail').textContent = user.email;
+
+        await loadMessages(userId);
+    };
+
+    window.startConversationWith = function(userId, name, email) {
+        currentConversationUser = { id: userId, name: name, email: email };
+        openConversation(userId);
+    };
+
+    window.closeConversation = function() {
+        document.getElementById('conversationView').classList.add('hidden');
+        document.getElementById('emptyState').classList.remove('hidden');
+        currentConversationUser = null;
+    };
+
+    async function loadMessages(userId) {
+        try {
+            const response = await secureFetch(`/messages/conversation/${userId}`);
+
+            if (response.ok) {
+                messages = await response.json();
+                displayMessages();
+                updateMessageBadge();
+                await loadConversations();
+            }
+        } catch (error) {
+            console.error('Erreur messages:', error);
+        }
+    }
+
+    function displayMessages() {
+        const container = document.getElementById('messagesContainer');
+        
+        if (messages.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg class="w-16 h-16 mx-auto text-thoughtful-silver mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <p class="text-sm text-thoughtful-blue">No messages</p>
+                    <p class="text-xs text-thoughtful-blue/60 mt-1">Start the conversation</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = messages.map(msg => {
+    const isFromMe = msg.isFromMe;
+    return `
+        <div class="flex ${isFromMe ? 'justify-end' : 'justify-start'}">
+            <div class="max-w-xs ${isFromMe ? 'bg-thoughtful-bright text-white' : 'bg-white text-thoughtful-navy border border-thoughtful-silver'} rounded-lg p-3 shadow">
+                <p class="text-sm">${escapeHtml(msg.content)}</p>
+                <p class="text-xs ${isFromMe ? 'text-white/80' : 'text-thoughtful-blue/60'} mt-1">
+                    ${formatMessageDate(msg.sentAt)}
+                </p>
+            </div>
+        </div>
+    `;
+}).join('');
+
+// Scroll vers le bas pour voir les derniers messages
+setTimeout(() => {
+    container.scrollTop = container.scrollHeight;
+}, 50);
+}
+
+window.sendMessage = async function(event) {
+    event.preventDefault();
+    
+    const input = document.getElementById('messageInput');
+    const content = input.value.trim();
+    
+    if (!content || !currentConversationUser) return;
+
+    try {
+        const response = await secureFetch('/messages/send', {
+            method: 'POST',
+            body: JSON.stringify({
+                receiverId: currentConversationUser.id,
+                content: content
+            })
+        });
+
+        if (response.ok) {
+            input.value = '';
+            await loadMessages(currentConversationUser.id);
+        } else {
+            showAlert('Error sending message');
+        }
+    } catch (error) {
+        console.error('Erreur envoi:', error);
+        showAlert('Error sending message');
+    }
+};
+
+//  UTILITAIRES 
+function formatMessageDate(dateStr) {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} min ago`;
+    if (diffMins < 1440) {
+        const hours = Math.floor(diffMins / 60);
+        return `${hours}h ago`;
+    }
+    
+    return date.toLocaleDateString('en-US', { 
+        day: 'numeric', 
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function showAlert(message) {
+    // Création d'une alerte élégante
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'fixed top-4 right-4 bg-white border-l-4 border-thoughtful-bright shadow-lg rounded-lg p-4 flex items-center gap-3 z-[60] animate-slide-in';
+    alertDiv.innerHTML = `
+        <svg class="w-6 h-6 text-thoughtful-bright flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <p class="text-thoughtful-navy font-medium">${escapeHtml(message)}</p>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.style.opacity = '0';
+        alertDiv.style.transform = 'translateX(100%)';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 3000);
+}
+
+// DÉMARRAGE
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMessaging);
+} else {
+    initMessaging();
+}
+
+window.addEventListener('beforeunload', () => {
+    if (messageUpdateInterval) clearInterval(messageUpdateInterval);
+});
+})();
+</script>
+
+<style>
+
+#conversationsList::-webkit-scrollbar,
+#messagesContainer::-webkit-scrollbar,
+#usersList::-webkit-scrollbar {
+    width: 6px;
+}
+
+#conversationsList::-webkit-scrollbar-track,
+#messagesContainer::-webkit-scrollbar-track,
+#usersList::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+#conversationsList::-webkit-scrollbar-thumb,
+#messagesContainer::-webkit-scrollbar-thumb,
+#usersList::-webkit-scrollbar-thumb {
+    background: #D1D9E0;
+    border-radius: 3px;
+}
+
+#conversationsList::-webkit-scrollbar-thumb:hover,
+#messagesContainer::-webkit-scrollbar-thumb:hover,
+#usersList::-webkit-scrollbar-thumb:hover {
+    background: #2C8E99;
+}
+
+
+@keyframes slide-in {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+
+
+#messagingPanel {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+
+@keyframes pulse-custom {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+    }
+}
+
+.animate-pulse {
+    animation: pulse-custom 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/
+#messagesContainer > div {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+input:focus,
+button:focus {
+    outline: 2px solid #48C0C4;
+    outline-offset: 2px;
+}
+
+.bg-thoughtful-bright\/10 {
+    background-color: rgba(72, 192, 196, 0.1);
+    border-left: 3px solid #48C0C4;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.animate-spin {
+    animation: spin 1s linear infinite;
+}
+
+@media (max-width: 768px) {
+    #messagingPanel {
+        max-width: 100%;
+    }
+    
+    .w-80 {
+        width: 100%;
+        max-width: 320px;
+    }
+}
+
+#messageForm input:focus {
+    box-shadow: 0 0 0 3px rgba(72, 192, 196, 0.1);
+}
+
+#messageForm button:hover {
+    box-shadow: 0 4px 12px rgba(72, 192, 196, 0.3);
+}
+
+.transition-all {
+    transition: all 0.2s ease-in-out;
+}
+
+.rounded-full {
+    box-shadow: 0 2px 4px rgba(11, 36, 59, 0.1);
+}
+
+#messagesContainer .shadow {
+    box-shadow: 0 1px 3px rgba(11, 36, 59, 0.1);
+}
+
+#userSearch:focus {
+    background-color: rgba(255, 255, 255, 0.35);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.text-center svg {
+    filter: drop-shadow(0 2px 4px rgba(11, 36, 59, 0.05));
+}
+
+@keyframes countUp {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.px-2.py-0\.5.bg-thoughtful-bright {
+    animation: countUp 0.3s ease-out;
+}
+
+.cursor-pointer:hover {
+    transform: translateX(2px);
+    transition: transform 0.2s ease-out;
+}
+
+.backdrop-blur-sm {
+    backdrop-filter: blur(8px);
+}
+
+* {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    background: #0B243B;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-top: 4px;
+}
+</style>
+
+</body>
+</html>

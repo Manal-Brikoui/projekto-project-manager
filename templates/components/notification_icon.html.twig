@@ -1,0 +1,193 @@
+
+
+<div class="fixed top-4 right-20 z-50">
+    <button onclick="openNotificationModal()" 
+            class="relative p-3 bg-white rounded-xl shadow-md hover:shadow-lg transition-all group"
+            title="View notifications">
+        
+        {# Bell icon #}
+        <svg class="w-6 h-6 text-slate-700 group-hover:text-thoughtful-bright transition-colors" 
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        
+      
+        <span id="notifBadgeIcon" 
+              class="hidden absolute -top-2 -right-2 
+                     flex items-center justify-center
+                     w-6 h-6 
+                     bg-teal-500 text-white 
+                     text-xs font-bold 
+                     rounded-full 
+                     border-2 border-white 
+                     shadow-md">
+            <span id="notifCountIcon">0</span>
+        </span>
+    </button>
+</div>
+
+<script>
+(function() {
+    'use strict';
+    
+    console.log(' [ICON] Initializing circular badge icon');
+    
+    const BADGE_ID = 'notifBadgeIcon';
+    const COUNT_ID = 'notifCountIcon';
+    let retryCount = 0;
+    const MAX_RETRIES = 15;
+    
+    function updateBadge(count) {
+        const badge = document.getElementById(BADGE_ID);
+        const countElement = document.getElementById(COUNT_ID);
+        
+        if (!badge || !countElement) {
+            console.warn(' [ICON] Badge or counter not found');
+            return;
+        }
+        
+        console.log(' [ICON] Updating circular badge:', count);
+        
+        if (count > 0) {
+            countElement.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+            badge.style.display = 'flex';
+        } else {
+            badge.classList.add('hidden');
+            badge.style.display = 'none';
+        }
+    }
+    
+ 
+    window.addEventListener('notificationCountUpdated', (event) => {
+        console.log(' [ICON] Event received:', event.detail);
+        if (event.detail && typeof event.detail.unreadCount === 'number') {
+            updateBadge(event.detail.unreadCount);
+        }
+    });
+    
+    //  Initialization with improved retry
+    function init() {
+        console.log(` [ICON] Init attempt ${retryCount + 1}/${MAX_RETRIES}`);
+        
+        if (window.NotificationSync && window.NotificationSync.isInitialized()) {
+            const count = window.NotificationSync.getCount();
+            console.log(' [ICON] NotificationSync ready, count:', count);
+            updateBadge(count);
+        } else if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            setTimeout(init, 300);
+        } else {
+            console.error(' [ICON] Timeout - Attempting manual recovery');
+            fetchCountManually();
+        }
+    }
+    
+   
+    async function fetchCountManually() {
+        try {
+            const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+            if (!token) {
+                console.warn(' [ICON] No token for fallback');
+                return;
+            }
+            
+            const response = await fetch('/notifications/count', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(' [ICON] Count fetched manually:', data.count);
+                updateBadge(data.count);
+            } else {
+                console.error(' [ICON] API error:', response.status);
+            }
+        } catch (error) {
+            console.error(' [ICON] Manual fetch error:', error);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        setTimeout(init, 100);
+    }
+    
+
+    window.testIconBadge = (count) => {
+        console.log(` [ICON] Testing with count = ${count}`);
+        updateBadge(count);
+    };
+    
+    console.log(' [ICON] Circular badge script loaded');
+})();
+</script>
+
+<style>
+
+#notifBadgeIcon {
+    transition: all 0.2s ease;
+    display: none;
+}
+
+#notifBadgeIcon.hidden {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+    display: none !important;
+}
+
+#notifBadgeIcon:not(.hidden) {
+    opacity: 1;
+    transform: scale(1);
+    display: flex !important;
+}
+
+
+button:hover #notifBadgeIcon:not(.hidden) {
+    transform: scale(1.05);
+}
+
+
+#notifCountIcon {
+    line-height: 1;
+}
+
+
+@media (max-width: 640px) {
+    .fixed.top-4.right-20 {
+        right: 1rem;
+    }
+    
+    #notifBadgeIcon {
+        width: 1.25rem;
+        height: 1.25rem;
+        font-size: 0.65rem;
+        top: -0.375rem;
+        right: -0.375rem;
+    }
+    
+    button {
+        padding: 0.625rem;
+    }
+    
+    button svg {
+        width: 1.25rem;
+        height: 1.25rem;
+    }
+}
+
+button:focus {
+    outline: 2px solid #48C0C4;
+    outline-offset: 2px;
+}
+
+button:focus:not(:focus-visible) {
+    outline: none;
+}
+</style>

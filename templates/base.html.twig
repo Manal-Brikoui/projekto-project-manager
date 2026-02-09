@@ -1,17 +1,417 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 128 128%22><text y=%221.2em%22 font-size=%2296%22>⚫️</text><text y=%221.3em%22 x=%220.2em%22 font-size=%2276%22 fill=%22%23fff%22>sf</text></svg>">
-        {% block stylesheets %}
-        {% endblock %}
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}ProjectManager{% endblock %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%221em%22 font-size=%2280%22>📦</text></svg>">
+    
+    {% block stylesheets %}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-        {% block javascripts %}
-            {% block importmap %}{{ importmap('app') }}{% endblock %}
-        {% endblock %}
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-    </body>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            color: white;
+        }
+
+        /* Styles communs */
+        .container {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 48px 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: white;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        .form-control::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #fca5a5;
+        }
+
+        .alert-success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #86efac;
+        }
+
+        .alert-info {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+        }
+
+        .alert-warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            color: #fcd34d;
+        }
+
+        a {
+            color: #3b82f6;
+            text-decoration: none;
+            transition: opacity 0.3s;
+        }
+
+        a:hover {
+            opacity: 0.8;
+        }
+
+        
+        :root {
+            --thoughtful-bright: #48C0C4;
+        }
+
+        .bg-thoughtful-bright {
+            background-color: var(--thoughtful-bright) !important;
+        }
+
+      
+        .notification-badge {
+            position: absolute;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            min-width: 20px;
+            height: 20px;
+            padding: 2px 6px;
+            background-color: var(--thoughtful-bright);
+            color: white;
+            font-size: 11px;
+            font-weight: 700;
+            line-height: 1;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(72, 192, 196, 0.5);
+            border: 2px solid white;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .notification-badge:not(.hidden) {
+            display: flex !important;
+            animation: pulse-notification 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-notification {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.15);
+                opacity: 0.9;
+            }
+        }
+    </style>
+    {% endblock %}
+</head>
+<body>
+    {% block body %}
+    <div class="container">
+        <div class="card">
+            <h1>Welcome to ProjectManager</h1>
+            <p>Start managing your projects efficiently.</p>
+        </div>
+    </div>
+    {% endblock %}
+
+    
+    
+    {% block javascripts %}
+     
+      
+<script>
+
+(function() {
+    'use strict';
+    
+    console.log(' [SYNC] Démarrage NotificationSync');
+    
+    let unreadCount = 0;
+    let isInitialized = false;
+    let updateInterval = null;
+    let userToken = null;
+    
+    window.NotificationSync = {
+        // Obtenir le compteur
+        getCount() {
+            return unreadCount;
+        },
+        
+        // Définir le compteur et notifier
+        setCount(count, source = 'unknown') {
+            const oldCount = unreadCount;
+            unreadCount = Math.max(0, parseInt(count) || 0);
+            
+            console.log(` [SYNC] ${oldCount} → ${unreadCount} (${source})`);
+            
+            // Dispatcher l'événement global
+            window.dispatchEvent(new CustomEvent('notificationCountUpdated', {
+                detail: {
+                    unreadCount: unreadCount,
+                    oldCount: oldCount,
+                    source: source
+                }
+            }));
+        },
+        
+        // Vérifier initialisation
+        isInitialized() {
+            return isInitialized;
+        },
+        
+        // Charger depuis l'API
+        async loadCount() {
+            if (!userToken) {
+                console.warn(' [SYNC] Pas de token');
+                return 0;
+            }
+            
+            try {
+                console.log(' [SYNC] Chargement API...');
+                
+                const response = await fetch('/notifications/count', {
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const count = data.count || 0;
+                    console.log('[SYNC] Count API:', count);
+                    this.setCount(count, 'api');
+                    return count;
+                } else if (response.status === 401) {
+                    console.error(' [SYNC] Token invalide');
+                    userToken = null;
+                    this.setCount(0, 'auth-error');
+                }
+            } catch (error) {
+                console.error(' [SYNC] Erreur:', error);
+            }
+            
+            return 0;
+        },
+        
+        // Rafraîchir
+        async refresh() {
+            console.log(' [SYNC] Rafraîchissement...');
+            await this.loadCount();
+        },
+        
+        // Initialiser
+        async init() {
+            if (isInitialized) {
+                console.log(' [SYNC] Déjà initialisé');
+                return;
+            }
+            
+            console.log(' [SYNC] Initialisation...');
+            
+            userToken = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+            
+            if (!userToken) {
+                console.warn(' [SYNC] Pas de token - mode déconnecté');
+                isInitialized = true;
+                return;
+            }
+            
+            await this.loadCount();
+            
+            isInitialized = true;
+            console.log(' [SYNC] Initialisé');
+            
+            // Auto-refresh toutes les 30s
+            if (updateInterval) clearInterval(updateInterval);
+            updateInterval = setInterval(() => this.loadCount(), 30000);
+        },
+        
+        // Nettoyer
+        destroy() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+            isInitialized = false;
+            unreadCount = 0;
+            console.log(' [SYNC] Nettoyé');
+        }
+    };
+    
+    // Auto-initialisation
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => window.NotificationSync.init(), 100);
+        });
+    } else {
+        setTimeout(() => window.NotificationSync.init(), 100);
+    }
+    
+    // Nettoyage
+    window.addEventListener('beforeunload', () => {
+        window.NotificationSync.destroy();
+    });
+    
+    console.log(' [SYNC] NotificationSync chargé');
+})();
+</script>
+
+    
+        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+          
+            {% include 'components/notification_icon.html.twig' %}
+            
+            {% include 'components/notification_navbar_button.html.twig' %}
+            
+          
+            {% include 'components/notification_modal.html.twig' %}
+        {% endif %}
+
+       
+        {% block importmap %}{{ importmap('app') }}{% endblock %}
+        
+        
+        {% block extra_javascripts %}{% endblock %}
+    {% endblock %}
+
+
+    {% if app.environment == 'dev' %}
+    <script>
+        console.log(' [DEV] Mode développement activé');
+        
+        setTimeout(() => {
+            if (typeof window.NotificationSync !== 'undefined') {
+                console.log(' [DEV] NotificationSync OK');
+                console.log('   Count:', window.NotificationSync.getCount());
+                console.log('   Init:', window.NotificationSync.isInitialized());
+                
+                // Fonction de test globale
+                window.testNotifications = function() {
+                    console.log('\n [TEST] Séquence de test');
+                    
+                    console.log('Test 1: 5 notifications');
+                    window.NotificationSync.setCount(5, 'test');
+                    
+                    setTimeout(() => {
+                        console.log('Test 2: 10 notifications');
+                        window.NotificationSync.setCount(10, 'test');
+                    }, 2000);
+                    
+                    setTimeout(() => {
+                        console.log('Test 3: 99+ notifications');
+                        window.NotificationSync.setCount(150, 'test');
+                    }, 4000);
+                    
+                    setTimeout(() => {
+                        console.log('Test 4: 0 notifications');
+                        window.NotificationSync.setCount(0, 'test');
+                    }, 6000);
+                    
+                    setTimeout(() => {
+                        console.log('Test 5: Refresh API');
+                        window.NotificationSync.refresh();
+                    }, 8000);
+                    
+                    console.log(' Tests lancés (10 secondes)');
+                };
+                
+                console.log(' [DEV] Tapez testNotifications() pour tester');
+            } else {
+                console.error(' [DEV] NotificationSync non chargé');
+            }
+        }, 500);
+    </script>
+    {% endif %}
+    
+</body>
 </html>

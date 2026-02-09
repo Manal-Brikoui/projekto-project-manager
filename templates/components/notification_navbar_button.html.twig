@@ -1,0 +1,191 @@
+
+
+<button onclick="window.location.href='/notifications/page'"
+        class="relative p-2 hover:bg-slate-100 rounded-lg transition-all group"
+        title="Voir les notifications">
+    
+   
+    <svg class="w-6 h-6 text-slate-700 group-hover:text-blue-600 transition-colors" 
+         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+    </svg>
+    
+    {# Badge compteur #}
+    <span id="notifBadgeNavbar" 
+          class="hidden absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 
+                 bg-red-500 text-white text-xs font-bold rounded-full 
+                 flex items-center justify-center shadow-lg border-2 border-white">
+        0
+    </span>
+</button>
+
+<script>
+(function() {
+    'use strict';
+    
+    console.log(' [NAVBAR] Initialisation du badge de notifications');
+    
+    const BADGE_ID = 'notifBadgeNavbar';
+    let updateInterval = null;
+    
+    // Met à jour l'affichage du badge
+   
+    function updateBadgeDisplay(count) {
+        const badge = document.getElementById(BADGE_ID);
+        
+        if (!badge) {
+            console.warn(' [NAVBAR] Badge introuvable');
+            return;
+        }
+        
+        console.log(' [NAVBAR] Mise à jour du badge:', count);
+        
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+    
+    // Récupère le nombre de notifications depuis l'API
+
+    async function fetchNotificationCount() {
+        try {
+            const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+            
+            if (!token) {
+                console.log(' [NAVBAR] Pas de token disponible');
+                return;
+            }
+            
+            const response = await fetch('/notifications/count', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                if (response.status === 401) {
+                    console.log(' [NAVBAR] Session expirée');
+                } else {
+                    console.error('❌ [NAVBAR] Erreur HTTP:', response.status);
+                }
+                return;
+            }
+            
+            const data = await response.json();
+            console.log(' [NAVBAR] Notifications récupérées:', data.count);
+            
+            updateBadgeDisplay(data.count);
+            
+            // Dispatcher un événement pour synchroniser avec d'autres composants
+            window.dispatchEvent(new CustomEvent('notificationCountUpdated', {
+                detail: { unreadCount: data.count }
+            }));
+            
+        } catch (error) {
+            console.error(' [NAVBAR] Erreur lors de la récupération:', error);
+        }
+    }
+    
+    // Initialise le badge et démarre la mise à jour automatique
+    function initNotificationBadge() {
+        console.log(' [NAVBAR] Démarrage de la synchronisation');
+        
+        // Première récupération immédiate
+        fetchNotificationCount();
+        
+        // Nettoyage de l'ancien intervalle si existant
+        if (updateInterval) {
+            clearInterval(updateInterval);
+        }
+        
+        // Mise à jour toutes les 30 secondes
+        updateInterval = setInterval(fetchNotificationCount, 30000);
+    }
+    
+    // Écoute de l'événement de mise à jour depuis d'autres composants
+  
+    window.addEventListener('notificationCountUpdated', (event) => {
+        if (event.detail && typeof event.detail.unreadCount === 'number') {
+            console.log(' [NAVBAR] Événement reçu:', event.detail.unreadCount);
+            updateBadgeDisplay(event.detail.unreadCount);
+        }
+    });
+    
+    // Nettoyage lors de la fermeture de la page
+     
+    window.addEventListener('beforeunload', () => {
+        console.log(' [NAVBAR] Nettoyage de l\'intervalle');
+        if (updateInterval) {
+            clearInterval(updateInterval);
+        }
+    });
+    
+    //Démarrage au chargement du DOM
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initNotificationBadge);
+    } else {
+       
+        initNotificationBadge();
+    }
+    
+    console.log(' [NAVBAR] Script de badge chargé et prêt');
+})();
+</script>
+
+<style>
+
+#notifBadgeNavbar {
+    box-shadow: 0 2px 8px rgba(16, 191, 222, 0.5);
+    transition: all 0.3s ease;
+}
+
+#notifBadgeNavbar.hidden {
+    opacity: 0;
+    transform: scale(0);
+    pointer-events: none;
+}
+
+
+#notifBadgeNavbar:not(.hidden) {
+    animation: pulse-notification 2s infinite;
+}
+
+@keyframes pulse-notification {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.9;
+    }
+}
+
+
+button:hover #notifBadgeNavbar:not(.hidden) {
+    animation: none;
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(44, 194, 202, 0.6);
+}
+
+
+@keyframes badge-appear {
+    0% {
+        transform: scale(0) rotate(-180deg);
+        opacity: 0;
+    }
+    50% {
+        transform: scale(1.2) rotate(0deg);
+    }
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+</style>

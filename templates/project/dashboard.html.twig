@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Projets - Gestion de Projets</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': {
+                            50: '#E8F4F5',
+                            100: '#D1E9EB',
+                            200: '#A3D3D7',
+                            300: '#48C0C4',
+                            400: '#2C8E99',
+                            500: '#1A435E',
+                            600: '#0B243B',
+                            700: '#081B2C',
+                            800: '#05121D',
+                            900: '#020A0F'
+                        },
+                        'accent': {
+                            light: '#48C0C4',
+                            DEFAULT: '#2C8E99',
+                            dark: '#1A435E'
+                        },
+                        'neutral': {
+                            light: '#D1D9E0',
+                            DEFAULT: '#FFFFFF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gradient-to-br from-neutral-light/20 via-white to-primary-50 min-h-screen">
+    
+    <!-- Sidebar -->
+    {% include 'components/sidebar.html.twig' %}
+   
+    <!-- Toggle Sidebar Button (Mobile) -->
+    <button id="sidebarToggle" class="fixed top-4 left-4 z-40 lg:hidden bg-primary-600 text-white p-3 rounded-lg shadow-lg hover:bg-primary-500 transition-all">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+
+    <!-- Main Content -->
+    <div class="lg:ml-72 transition-all duration-300">
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-neutral-light/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h1 class="text-3xl font-bold text-primary-600">My Projects</h1>
+                        <p class="mt-1 text-primary-500/70">Manage your projects and track their progress</p>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="flex items-center gap-3">
+                    {% include 'message/messaging_icon.html.twig' %}
+                        <!-- Bouton Notification Modal -->
+                        <button onclick="openNotificationModal()" 
+                                class="relative p-3 bg-primary-50 hover:bg-primary-100 rounded-lg transition-all hover:scale-105 group"
+                                title="Notifications">
+                            <svg class="w-6 h-6 text-primary-500 group-hover:text-accent-light transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                            </svg>
+                            <span 
+    id="notifBadgeHeader" 
+    class="hidden absolute -top-1 -right-1 w-5 h-5 text-white text-xs font-bold rounded-full items-center justify-center shadow-lg"
+    style="
+        display: none; 
+        background-color: #48C0C4;
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    ">
+    0
+</span>
+                        </button>
+
+                        <!-- Bouton nouveau projet -->
+                        <button onclick="openModal()" class="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-light to-accent text-white rounded-lg hover:from-accent hover:to-accent-dark transition-all shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            New Project
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
+            <div class="border-b border-neutral-light/50">
+                <nav class="flex gap-8">
+                    <button onclick="switchTab('owned')" id="tabOwned" class="py-4 px-1 border-b-2 border-accent-light font-medium text-sm text-accent-light">
+                        My Projects
+                        <span id="ownedTabCount" class="ml-2 px-2 py-1 bg-primary-50 text-accent-light rounded-full text-xs">0</span>
+                    </button>
+                    <button onclick="switchTab('shared')" id="tabShared" class="py-4 px-1 border-b-2 border-transparent font-medium text-sm text-primary-500/70 hover:text-primary-500 hover:border-neutral-light">
+                       Shared Projects
+                        <span id="sharedTabCount" class="ml-2 px-2 py-1 bg-neutral-light/50 text-primary-500 rounded-full text-xs">0</span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4"></div>
+
+        <!-- Loading -->
+        <div id="loading" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+            <div class="w-16 h-16 border-4 border-accent-light border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p class="mt-4 text-primary-500">Loading projects...</p>
+        </div>
+
+        <!-- Projects Container -->
+        <div id="ownedProjectsContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+        <div id="sharedProjectsContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 hidden"></div>
+    </div>
+
+    <!-- Modal Create/Edit -->
+    <div id="projectModal" class="hidden fixed inset-0 bg-primary-600/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-light/30">
+            <div class="sticky top-0 bg-gradient-to-r from-accent-light to-accent text-white p-6 rounded-t-2xl">
+                <div class="flex items-center gap-3">
+                    <svg id="modalIcon" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    <h2 id="modalTitle" class="text-2xl font-bold"></h2>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="projectId">
+                
+                <div>
+                    <label class="block text-sm font-semibold text-primary-600 mb-2">Project title *</label>
+                    <input type="text" id="title" required class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent" placeholder="Ex: Application mobile">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-semibold text-primary-600 mb-2">Description *</label>
+                    <textarea id="description" required rows="4" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent resize-none" placeholder="Describe your project..."></textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-primary-600 mb-2">Start date *</label>
+                        <input type="date" id="startdate" required class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent">
+                        <p id="startDateError" class="hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            The end date cannot be in the past
+                        </p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-primary-600 mb-2">End date *</label>
+                        <input type="date" id="enddate" required class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent">
+                        <p id="endDateError" class="hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                            </svg>
+                            The end date must be greater than or equal to the start date
+                        </p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-primary-600 mb-2">Statuts</label>
+                        <select id="status" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent">
+                            <option value="en_cours">In progress</option>
+                            <option value="termine">Completed</option>
+                            <option value="en_attente">Pending</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div>
+    <label class="block text-sm font-semibold text-primary-600 mb-2">Rating (0–10)</label>
+    <input type="number" id="evaluation" min="0" max="10" step="1" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent" placeholder="0-10">
+    <p id="evaluationError" class="hidden text-xs text-red-600 mt-1 flex items-center gap-1">
+        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        Rating must be between 0 and 10
+    </p>
+</div>
+                </div>
+
+                <div class="flex gap-3 pt-4">
+                    <button onclick="closeModal()" class="flex-1 px-6 py-3 border border-neutral-light text-primary-500 rounded-lg hover:bg-primary-50 transition-all font-medium">
+                        Cancel
+                    </button>
+                    <button onclick="saveProject()" id="saveButton" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-light to-accent text-white rounded-lg hover:from-accent hover:to-accent-dark transition-all font-medium shadow-lg hover:shadow-xl">
+                        <svg id="submitIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                        </svg>
+                        <span id="submitBtn">Create Project
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+
+    {% include 'components/notification_modal.html.twig' %}
+
+    <script>
+    let currentUserId = null;
+    let userToken = null;
+    let allProjects = [];
+    let currentTab = 'owned';
+    document.addEventListener('DOMContentLoaded', async () => {
+        const token = localStorage.getItem('token');
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (!token || !user.id) {
+            window.location.href = '/users/login-form';
+            return;
+        }
+
+        currentUserId = user.id;
+        userToken = token;
+        
+        const userEmailElement = document.getElementById('userEmail');
+        if (userEmailElement) {
+            userEmailElement.textContent = user.email || 'Utilisateur';
+        }
+          setMinimumDates();
+setupDateValidation();
+setupRatingValidation();
+
+        try {
+            await Promise.all([
+                loadProjects(),
+                loadTasks()
+            ]);
+            
+            restoreActiveTab();
+            
+        } catch (error) {
+            console.error('Erreur lors du chargement:', error);
+        }
+    });
+
+    function setMinimumDates() {
+    const today = new Date().toISOString().split('T')[0];
+    
+    const startDateInput = document.getElementById('startdate');
+    const endDateInput = document.getElementById('enddate');
+    
+    if (startDateInput) {
+        // Toujours définir min à aujourd'hui
+        startDateInput.setAttribute('min', today);
+        startDateInput.style.cursor = 'pointer';
+        
+        const newStartInput = startDateInput.cloneNode(true);
+        startDateInput.parentNode.replaceChild(newStartInput, startDateInput);
+        
+        // Bloquer uniquement lors du changement
+        newStartInput.addEventListener('change', function(e) {
+            if (e.target.value && e.target.value < today) {
+                e.target.value = '';
+                showMessage('The start date cannot be in the past. Please choose a date from today onwards.', 'error');
+            } else {
+                validateDates();
+                updateEndDateMinimum();
+            }
+        });
+        
+        newStartInput.addEventListener('input', function(e) {
+            if (e.target.value && e.target.value < today) {
+                const oldValue = e.target.value;
+                e.target.value = '';
+                showMessage('Cannot enter a past date', 'error');
+            }
+        });
+    }
+    
+    if (endDateInput) {
+        // Toujours définir min à aujourd'hui
+        endDateInput.setAttribute('min', today);
+        endDateInput.style.cursor = 'pointer';
+        
+        const newEndInput = endDateInput.cloneNode(true);
+        endDateInput.parentNode.replaceChild(newEndInput, endDateInput);
+        
+        // Bloquer uniquement lors du changement
+        newEndInput.addEventListener('change', function(e) {
+            if (e.target.value && e.target.value < today) {
+                e.target.value = '';
+                showMessage('The end date cannot be in the past. Please choose a date from today onwards.', 'error');
+            } else {
+                validateDates();
+            }
+        });
+        
+        newEndInput.addEventListener('input', function(e) {
+            if (e.target.value && e.target.value < today) {
+                e.target.value = '';
+                showMessage('Cannot enter a past date', 'error');
+            }
+        });
+    }
+}
+    function setupDateValidation() {
+        const startDateInput = document.getElementById('startdate');
+        const endDateInput = document.getElementById('enddate');
+        
+        if (startDateInput) {
+            // Retirer les anciens événements pour éviter les doublons
+            const newStartDateInput = startDateInput.cloneNode(true);
+            startDateInput.parentNode.replaceChild(newStartDateInput, startDateInput);
+            
+            newStartDateInput.addEventListener('change', () => {
+                validateDates();
+                updateEndDateMinimum();
+            });
+            newStartDateInput.addEventListener('input', () => {
+                validateDates();
+                updateEndDateMinimum();
+            });
+        }
+        
+        if (endDateInput) {
+            // Retirer les anciens événements pour éviter les doublons
+            const newEndDateInput = endDateInput.cloneNode(true);
+            endDateInput.parentNode.replaceChild(newEndDateInput, endDateInput);
+            
+            newEndDateInput.addEventListener('change', validateDates);
+            newEndDateInput.addEventListener('input', validateDates);
+        }
+    }
+
+    function updateEndDateMinimum() {
+        const startDate = document.getElementById('startdate')?.value;
+        const endDateInput = document.getElementById('enddate');
+        
+        if (startDate && endDateInput) {
+            endDateInput.setAttribute('min', startDate);
+        }
+    }
+function validateDates() {
+    const startDate = document.getElementById('startdate')?.value;
+    const endDate = document.getElementById('enddate')?.value;
+    const startDateError = document.getElementById('startDateError');
+    const endDateError = document.getElementById('endDateError');
+    const saveButton = document.getElementById('saveButton');
+    const startDateInput = document.getElementById('startdate');
+    const endDateInput = document.getElementById('enddate');
+    const projectId = document.getElementById('projectId').value;
+    
+    const today = new Date().toISOString().split('T')[0];
+    const isEditing = !!projectId;
+    
+    let isValid = true;
+    
+    if (!isEditing) {
+        //  bloquer les dates passées
+        if (startDate && startDate < today) {
+            if (startDateError) startDateError.classList.remove('hidden');
+            if (startDateInput) {
+                startDateInput.classList.add('border-red-500', 'focus:ring-red-500');
+                startDateInput.classList.remove('border-neutral-light', 'focus:ring-accent-light');
+            }
+            isValid = false;
+        } else {
+            if (startDateError) startDateError.classList.add('hidden');
+            if (startDateInput) {
+                startDateInput.classList.remove('border-red-500', 'focus:ring-red-500');
+                startDateInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+            }
+        }
+        
+        if (endDate && endDate < today) {
+            if (endDateError) {
+                endDateError.innerHTML = '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg> The end date cannot be in the past';
+                endDateError.classList.remove('hidden');
+            }
+            if (endDateInput) {
+                endDateInput.classList.add('border-red-500', 'focus:ring-red-500');
+                endDateInput.classList.remove('border-neutral-light', 'focus:ring-accent-light');
+            }
+            isValid = false;
+        } else {
+            if (endDateError) endDateError.classList.add('hidden');
+            if (endDateInput) {
+                endDateInput.classList.remove('border-red-500', 'focus:ring-red-500');
+                endDateInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+            }
+        }
+    } else {
+        //  ne pas afficher d'erreurs pour les dates existantes
+        if (startDateError) startDateError.classList.add('hidden');
+        if (endDateError) endDateError.classList.add('hidden');
+        if (startDateInput) {
+            startDateInput.classList.remove('border-red-500', 'focus:ring-red-500');
+            startDateInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+        }
+        if (endDateInput) {
+            endDateInput.classList.remove('border-red-500', 'focus:ring-red-500');
+            endDateInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+        }
+    }
+    
+    // Validation de cohérence 
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        
+        if (end < start) {
+            if (endDateError) {
+                endDateError.innerHTML = '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg> The end date must be greater than or equal to the start date';
+                endDateError.classList.remove('hidden');
+            }
+            if (endDateInput) {
+                endDateInput.classList.add('border-red-500', 'focus:ring-red-500');
+                endDateInput.classList.remove('border-neutral-light', 'focus:ring-accent-light');
+            }
+            isValid = false;
+        }
+    }
+    
+    if (saveButton) {
+        saveButton.disabled = !isValid;
+        if (!isValid) {
+            saveButton.classList.add('opacity-50', 'cursor-not-allowed');
+        } else {
+            saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+    }
+    
+    return isValid;
+}
+function setupRatingValidation() {
+    const evaluationInput = document.getElementById('evaluation');
+    
+    if (!evaluationInput) return;
+    
+    // Real-time validation during input
+    evaluationInput.addEventListener('input', validateRating);
+    evaluationInput.addEventListener('change', validateRating);
+    
+    // Block non-numeric characters
+    evaluationInput.addEventListener('keydown', function(e) {
+        // Allow: backspace, delete, tab, escape, enter
+        if ([46, 8, 9, 27, 13].indexOf(e.keyCode) !== -1 ||
+            // Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
+            (e.keyCode === 65 && e.ctrlKey === true) ||
+            (e.keyCode === 67 && e.ctrlKey === true) ||
+            (e.keyCode === 86 && e.ctrlKey === true) ||
+            (e.keyCode === 88 && e.ctrlKey === true) ||
+            // Allow: home, end, left, right
+            (e.keyCode >= 35 && e.keyCode <= 39)) {
+            return;
+        }
+        
+        // Block if not a number
+        if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && 
+            (e.keyCode < 96 || e.keyCode > 105)) {
+            e.preventDefault();
+        }
+    });
+}
+
+function validateRating() {
+    const evaluationInput = document.getElementById('evaluation');
+    const evaluationError = document.getElementById('evaluationError');
+    
+    if (!evaluationInput) return true;
+    
+    const value = evaluationInput.value;
+    
+    // If empty, it's valid (optional field)
+    if (value === '') {
+        hideError();
+        return true;
+    }
+    
+    const numValue = parseFloat(value);
+    
+    // Check if it's a valid number
+    if (isNaN(numValue)) {
+        showError();
+        evaluationInput.value = '';
+        return false;
+    }
+    
+    // Check range 0-10
+    if (numValue < 0 || numValue > 10) {
+        showError();
+        // Auto-correct value
+        if (numValue < 0) evaluationInput.value = '0';
+        else if (numValue > 10) evaluationInput.value = '10';
+        return false;
+    }
+    
+    hideError();
+    return true;
+    
+    function showError() {
+        if (evaluationError) evaluationError.classList.remove('hidden');
+        evaluationInput.classList.add('border-red-500', 'focus:ring-red-500');
+        evaluationInput.classList.remove('border-neutral-light', 'focus:ring-accent-light');
+    }
+    
+    function hideError() {
+        if (evaluationError) evaluationError.classList.add('hidden');
+        evaluationInput.classList.remove('border-red-500', 'focus:ring-red-500');
+        evaluationInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+    }
+}
+    async function loadProjects() {
+    try {
+        const response = await fetch('/projects/', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+
+        if (response.status === 401) {
+            throw new Error('Not authenticated - Session expired');
+        }
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Erreur response:', errorText);
+            throw new Error(`HTTP Error ${response.status}`);
+        }
+        
+        allProjects = await response.json();
+        console.log(' Tous les projets reçus:', allProjects);
+        
+        const currentUserIdNum = Number(currentUserId);
+        console.log(' ID utilisateur actuel:', currentUserIdNum);
+        
+        
+        // Un projet m'appartient SI et SEULEMENT SI je suis le creator_id original
+        const ownedProjects = allProjects.filter(p => {
+            const creatorIdNum = Number(p.creator_id);
+            const isOwner = creatorIdNum === currentUserIdNum;
+            
+            if (isOwner) {
+                console.log(` Projet propriétaire: ${p.title} (ID: ${p.id}, creator_id: ${p.creator_id})`);
+            }
+            
+            return isOwner;
+        });
+
+        // Un projet est partagé SI je suis membre MAIS PAS le créateur original
+        const sharedProjects = allProjects.filter(p => {
+            const creatorIdNum = Number(p.creator_id);
+            const isOriginalCreator = creatorIdNum === currentUserIdNum;
+            
+            //  Si je suis le créateur original, ce N'EST PAS un projet partagé
+            if (isOriginalCreator) {
+                console.log(` Exclu des partagés (je suis le créateur): ${p.title}`);
+                return false;
+            }
+            
+            // Vérifier si je suis membre du projet
+            let isMember = false;
+            
+            //  Vérifier dans le tableau members
+            if (Array.isArray(p.members)) {
+                isMember = p.members.some(member => 
+                    Number(member.id) === currentUserIdNum
+                );
+            }
+            
+            //  Vérifier dans creator_ids (utilisateurs ajoutés)
+            if (!isMember && Array.isArray(p.creator_ids)) {
+                isMember = p.creator_ids.some(id => 
+                    Number(id) === currentUserIdNum
+                );
+            }
+            
+            if (isMember) {
+                console.log(` Projet partagé: ${p.title} (ID: ${p.id})`);
+                console.log('   Créateur original:', p.creator_name, '(ID:', p.creator_id, ')');
+                console.log('   Je suis membre mais pas créateur');
+            }
+            
+            return isMember;
+        });
+
+        console.log(' Résultat final:');
+        console.log('  - Mes projets:', ownedProjects.length);
+        console.log('  - Projets partagés:', sharedProjects.length);
+
+        // Mettre à jour les compteurs
+        const ownedTabCountEl = document.getElementById('ownedTabCount');
+        const sharedTabCountEl = document.getElementById('sharedTabCount');
+        const myProjectsCountEl = document.getElementById('myProjectsCount');
+        const sharedProjectsCountEl = document.getElementById('sharedProjectsCount');
+        
+        if (ownedTabCountEl) ownedTabCountEl.textContent = ownedProjects.length;
+        if (sharedTabCountEl) sharedTabCountEl.textContent = sharedProjects.length;
+        if (myProjectsCountEl) myProjectsCountEl.textContent = ownedProjects.length;
+        if (sharedProjectsCountEl) sharedProjectsCountEl.textContent = sharedProjects.length;
+
+        // Afficher les projets
+        displayOwnedProjects(ownedProjects);
+        displaySharedProjects(sharedProjects);
+
+        // Afficher dans la sidebar
+        displaySidebarProjects('myProjectsList', ownedProjects, true);
+        displaySidebarProjects('sharedProjectsList', sharedProjects, false);
+
+    } catch (error) {
+        console.error(' Erreur loadProjects:', error);
+        
+        if (error.message.includes('Non authentifié') || error.message.includes('401')) {
+            showMessage('Session expired. Reconnection required.', 'error');
+            setTimeout(() => {
+                localStorage.clear();
+                window.location.href = '/users/login-form';
+            }, 2000);
+        } else {
+            showMessage('Unable to load projects', 'error');
+        }
+    } finally {
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('ownedProjectsContainer').classList.remove('hidden');
+    }
+}
+
+    function displayOwnedProjects(projects) {
+        const container = document.getElementById('ownedProjectsContainer');
+        
+        if (projects.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-16">
+                    <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-12 h-12 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-primary-600 mb-2">No projects created</h3>
+                    <p class="text-primary-500/70 mb-6">Start by creating your first project</p>
+                    <button onclick="openModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-light to-accent text-white rounded-lg hover:from-accent hover:to-accent-dark transition-all shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Create a project
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${projects.map(project => createProjectCard(project, true)).join('')}
+            </div>
+        `;
+    }
+
+    function displaySharedProjects(projects) {
+        const container = document.getElementById('sharedProjectsContainer');
+        
+        if (projects.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-16">
+                    <div class="w-24 h-24 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-12 h-12 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-primary-600 mb-2"> No shared projects</h3>
+                    <p class="text-primary-500/70">You are not a member of any shared project</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                ${projects.map(project => createProjectCard(project, false)).join('')}
+            </div>
+        `;
+    }
+
+    function createProjectCard(project, isOwner) {
+        const statusBadge = getStatusBadge(project.status);
+        const roleIcon = isOwner ? 
+            '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>' :
+            '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>';
+        const roleText = isOwner ? 'Owner' : 'Member';
+        const roleColor = isOwner ? 'bg-yellow-100 text-yellow-700' : 'bg-primary-100 text-primary-600';
+        const cardGradient = isOwner ? 'from-accent-light to-accent' : 'from-primary-500 to-primary-600';
+        
+        return `
+                            <div class="bg-white rounded-xl shadow-md hover:shadow-xl transition-all overflow-hidden border border-neutral-light/30">
+                    <div class="bg-gradient-to-r ${cardGradient} p-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <h3 class="text-lg font-bold text-white mb-1">${project.title}</h3>
+                                <span class="inline-flex items-center gap-1 px-2 py-1 ${roleColor} text-xs rounded-full font-medium">
+                                    ${roleIcon}
+                                    ${roleText}
+                                </span>
+                            </div>
+                            ${statusBadge}
+                        </div>
+                    </div>
+
+                    <div class="p-5">
+                        <p class="text-primary-500/70 text-sm mb-4 line-clamp-3">
+                            ${project.description || 'No description'}
+                        </p>
+
+                        <div class="space-y-2 mb-4">
+                            <div class="flex items-center gap-2 text-sm text-primary-500">
+                                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="font-medium">Start:</span>
+                                <span>${project.startdate || 'Not set'}</span>
+                            </div>
+                            <div class="flex items-center gap-2 text-sm text-primary-500">
+                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                                </svg>
+                                <span class="font-medium">End:</span>
+                                <span>${project.enddate || 'Not set'}</span>
+                            </div>
+                            ${project.evaluation ? `
+                                <div class="flex items-center gap-2 text-sm text-primary-500">
+                                    <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                                    </svg>
+                                    <span class="font-medium">Rating:</span>
+                                    <span class="text-yellow-600 font-bold">${project.evaluation}/10</span>
+                                </div>
+                            ` : ''}
+                            <div class="flex items-center gap-2 text-sm text-primary-500">
+                                <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                                </svg>
+                                <span class="font-medium">Members:</span>
+                                <span>${project.creator_ids?.length || 0}</span>
+                            </div>
+                        </div>
+
+                        ${isOwner ? `
+                            <div class="flex gap-2 pt-4 border-t border-neutral-light/50">
+                                <button onclick="viewProject(${project.id})" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    View
+                                </button>
+                                <button onclick="editProject(${project.id})" class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-accent-light/10 text-accent rounded-lg hover:bg-accent-light/20 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                    </svg>
+                                    Edit
+                                </button>
+                                <button onclick="deleteProject(${project.id})" class="flex items-center justify-center gap-2 px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="pt-4 border-t border-neutral-light/50">
+                                <button onclick="viewProject(${project.id})" class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-primary-100 text-primary-600 rounded-lg hover:bg-primary-200 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    View project
+                                </button>
+                                <div class="flex items-center justify-center gap-2 text-sm text-primary-500/70 italic mt-3">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    You are a member - View only
+                                </div>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            `;
+        }
+
+        function displaySidebarProjects(containerId, projects, isOwner) {
+            const container = document.getElementById(containerId);
+            
+            if (!container) return;
+            
+            if (projects.length === 0) {
+                container.innerHTML = '<p class="text-xs text-neutral-light/70 italic">No projects</p>';
+                return;
+            }
+
+            const icon = isOwner ? 
+                '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>' :
+                '<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>';
+            
+            container.innerHTML = projects.map(project => `
+                <a href="/projects/show/${project.id}" class="flex items-center gap-2 px-3 py-2 text-sm text-neutral-light hover:bg-primary-500/30 rounded-lg transition-all group">
+                    <span class="text-neutral-light/70">${icon}</span>
+                    <div class="w-2 h-2 rounded-full ${getStatusColor(project.status)}"></div>
+                    <span class="flex-1 truncate">${project.title}</span>
+                    <svg class="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            `).join('');
+        }
+
+        function restoreActiveTab() {
+            const savedTab = localStorage.getItem('activeProjectTab');
+            if (savedTab === 'shared') {
+                switchTab('shared');
+            } else {
+                switchTab('owned');
+            }
+        }
+
+        async function loadTasks() {
+            try {
+                const response = await fetch(`/users/view/${currentUserId}/tasks`, {
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Erreur');
+                
+                const tasks = await response.json();
+                displayTasks(tasks);
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                const tasksList = document.getElementById('tasksList');
+                if (tasksList) {
+                    tasksList.innerHTML = '<p class="text-xs text-red-400">Error</p>';
+                }
+            }
+        }
+
+        function displayTasks(tasks) {
+            const container = document.getElementById('tasksList');
+            const count = document.getElementById('tasksCount');
+            
+            if (!container || !count) return;
+            
+            count.textContent = tasks.length;
+
+            if (tasks.length === 0) {
+                container.innerHTML = '<p class="text-xs text-neutral-light/70 italic">No tasks</p>';
+                return;
+            }
+
+            container.innerHTML = tasks.slice(0, 5).map(task => `
+                <div class="flex items-center gap-2 px-3 py-2 text-sm text-neutral-light hover:bg-primary-500/30 rounded-lg transition-all">
+                    <div class="w-2 h-2 rounded-full ${getTaskStatusColor(task.status)}"></div>
+                    <span class="flex-1 truncate">${task.title}</span>
+                </div>
+            `).join('');
+
+            if (tasks.length > 5) {
+                container.innerHTML += `<p class="text-xs text-neutral-light/70 italic px-3 py-2">+${tasks.length - 5} more</p>`;
+            }
+        }
+
+        function switchTab(tab) {
+            currentTab = tab;
+            localStorage.setItem('activeProjectTab', tab);
+            
+            const tabOwned = document.getElementById('tabOwned');
+            const tabShared = document.getElementById('tabShared');
+            const ownedContainer = document.getElementById('ownedProjectsContainer');
+            const sharedContainer = document.getElementById('sharedProjectsContainer');
+            
+            if (tab === 'owned') {
+                tabOwned.className = 'py-4 px-1 border-b-2 border-accent-light font-medium text-sm text-accent-light';
+                tabShared.className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-primary-500/70 hover:text-primary-500 hover:border-neutral-light';
+                ownedContainer.classList.remove('hidden');
+                sharedContainer.classList.add('hidden');
+            } else {
+                tabOwned.className = 'py-4 px-1 border-b-2 border-transparent font-medium text-sm text-primary-500/70 hover:text-primary-500 hover:border-neutral-light';
+                tabShared.className = 'py-4 px-1 border-b-2 border-primary-400 font-medium text-sm text-primary-400';
+                ownedContainer.classList.add('hidden');
+                sharedContainer.classList.remove('hidden');
+            }
+        }
+
+        function openModal() {
+            const modalIcon = document.getElementById('modalIcon');
+            const modalTitle = document.getElementById('modalTitle');
+            const submitBtn = document.getElementById('submitBtn');
+            const submitIcon = document.getElementById('submitIcon');
+            
+            modalIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>';
+            modalTitle.textContent = 'Create New Project';
+            submitBtn.textContent = 'Create Project';
+            submitIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>';
+            
+            document.getElementById('projectModal').classList.remove('hidden');
+            resetForm();
+            
+            // Appliquer le blocage des dates passées pour l'ajout
+            setTimeout(() => {
+                setMinimumDates();
+                setupDateValidation();
+            }, 100);
+        }
+
+        function closeModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+            resetForm();
+        }
+
+       function resetForm() {
+    document.getElementById('projectId').value = '';
+    document.getElementById('title').value = '';
+    document.getElementById('description').value = '';
+    document.getElementById('startdate').value = '';
+    document.getElementById('enddate').value = '';
+    document.getElementById('status').value = 'en_cours';
+    document.getElementById('evaluation').value = '';
+    
+    // Réactiver les champs de date
+    const startDateInput = document.getElementById('startdate');
+    const endDateInput = document.getElementById('enddate');
+    if (startDateInput) startDateInput.disabled = false;
+    if (endDateInput) endDateInput.disabled = false;
+    
+    // Supprimer le message d'avertissement
+    const warning = document.getElementById('dateWarning');
+    if (warning) warning.remove();
+    
+    const startDateError = document.getElementById('startDateError');
+    const endDateError = document.getElementById('endDateError');
+    
+    if (startDateError) startDateError.classList.add('hidden');
+    if (endDateError) endDateError.classList.add('hidden');
+    // Validate rating
+if (!validateRating()) {
+    showMessage('Rating must be between 0 and 10', 'error');
+    return;
+}
+
+const evaluationValue = document.getElementById('evaluation').value;
+if (evaluationValue !== '' && (parseFloat(evaluationValue) < 0 || parseFloat(evaluationValue) > 10)) {
+    showMessage('Rating must be between 0 and 10', 'error');
+    return;
+}
+    
+    if (startDateInput) {
+        startDateInput.classList.remove('border-red-500', 'focus:ring-red-500');
+        startDateInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+    }
+    
+    if (endDateInput) {
+        endDateInput.classList.remove('border-red-500', 'focus:ring-red-500');
+        endDateInput.classList.add('border-neutral-light', 'focus:ring-accent-light');
+    }
+    
+    const saveButton = document.getElementById('saveButton');
+    if (saveButton) {
+        saveButton.disabled = false;
+        saveButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+        function viewProject(projectId) {
+            localStorage.setItem('activeProjectTab', currentTab);
+            window.location.href = `/projects/show/${projectId}`;
+        }
+
+       async function editProject(projectId) {
+    try {
+        const response = await fetch(`/projects/${projectId}`, {
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Loading error');
+        
+        const project = await response.json();
+        
+        document.getElementById('projectId').value = project.id;
+        document.getElementById('title').value = project.title;
+        document.getElementById('description').value = project.description;
+        document.getElementById('startdate').value = project.startdate;
+        document.getElementById('enddate').value = project.enddate;
+        document.getElementById('status').value = project.status;
+        document.getElementById('evaluation').value = project.evaluation || '';
+        
+        const modalIcon = document.getElementById('modalIcon');
+        const modalTitle = document.getElementById('modalTitle');
+        const submitBtn = document.getElementById('submitBtn');
+        const submitIcon = document.getElementById('submitIcon');
+        
+        modalIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>';
+        modalTitle.textContent = 'Edit Project';
+        submitBtn.textContent = 'Update';
+        submitIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+        
+        document.getElementById('projectModal').classList.remove('hidden');
+        
+        // Toujours appliquer le blocage des dates passées
+        setTimeout(() => {
+            setMinimumDates();
+            setupDateValidation();
+            // Ne pas valider immédiatement pour permettre l'affichage des dates existantes
+        }, 100);
+    } catch (error) {
+        showMessage('Unable to load project', 'error');
+    }
+}
+async function saveProject() {
+    const projectId = document.getElementById('projectId').value;
+    const isNewProject = !projectId;
+    
+    const data = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        startdate: document.getElementById('startdate').value,
+        enddate: document.getElementById('enddate').value,
+        status: document.getElementById('status').value,
+        evaluation: document.getElementById('evaluation').value
+    };
+
+    if (!data.title || !data.description || !data.startdate || !data.enddate) {
+        showMessage('All required fields must be filled', 'error');
+        return;
+    }
+    // Validate rating
+if (!validateRating()) {
+    showMessage('Rating must be between 0 and 10', 'error');
+    return;
+}
+
+const evaluationValue = document.getElementById('evaluation').value;
+if (evaluationValue !== '' && (parseFloat(evaluationValue) < 0 || parseFloat(evaluationValue) > 10)) {
+    showMessage('Rating must be between 0 and 10', 'error');
+    return;
+}
+
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Validation des dates passées UNIQUEMENT pour les nouveaux projets
+    if (isNewProject) {
+        if (data.startdate < today) {
+            showMessage('The start date cannot be in the past', 'error');
+            return;
+        }
+        
+        if (data.enddate < today) {
+            showMessage('The end date cannot be in the past', 'error');
+            return;
+        }
+    }
+    
+    // Validation de cohérence (toujours active)
+    if (data.enddate < data.startdate) {
+        showMessage('The end date must be greater than or equal to the start date', 'error');
+        return;
+    }
+
+    const url = projectId ? `/projects/update/${projectId}` : '/projects/add';
+    const method = projectId ? 'PUT' : 'POST';
+
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: {
+                'Authorization': `Bearer ${userToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            throw new Error(result.error || result.message || 'Error');
+        }
+
+        showMessage(projectId ? 'Project updated successfully' : 'Project created successfully', 'success');
+        closeModal();
+        localStorage.setItem('activeProjectTab', 'owned');
+        await loadProjects();
+        switchTab('owned');
+    } catch (error) {
+        showMessage(error.message, 'error');
+    }
+}
+        async function deleteProject(projectId) {
+            if (!confirm('Are you sure you want to delete this project? This action is irreversible.')) return;
+
+            try {
+                const response = await fetch(`/projects/delete/${projectId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Deletion error');
+                }
+
+                showMessage('Project deleted successfully.', 'success');
+                await loadProjects();
+            } catch (error) {
+                showMessage(error.message, 'Error');
+            }
+        }
+
+        function toggleSection(section) {
+            const list = document.getElementById(`${section}List`);
+            const icon = document.getElementById(`${section}Icon`);
+            
+            if (list && icon) {
+                list.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            }
+        }
+
+        function getStatusColor(status) {
+            const colors = {
+                'en_cours': 'bg-accent-light',
+                'termine': 'bg-green-500',
+                'en_attente': 'bg-yellow-500'
+            };
+            return colors[status] || 'bg-neutral-light';
+        }
+
+        function getStatusBadge(status) {
+    const badges = {
+        'en_cours': { color: 'bg-accent-light/20 text-primary-50', label: 'In Progress' },
+        'termine': { color: 'bg-green-100 text-green-700', label: 'Completed' },
+        'en_attente': { color: 'bg-yellow-100 text-yellow-700', label: 'Pending' }
+    };
+    
+    const badge = badges[status] || badges['en_cours'];
+    return `<span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${badge.color}">${badge.label}</span>`;
+}
+
+        function getTaskStatusColor(status) {
+            const colors = {
+                'todo': 'bg-neutral-light',
+                'in_progress': 'bg-accent-light',
+                'done': 'bg-green-500'
+            };
+            return colors[status] || 'bg-neutral-light';
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            if (!container) return;
+            
+            const bgColor = type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700';
+            const icon = type === 'success' ? 
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>' :
+                '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+            
+            container.innerHTML = `
+                <div class="${bgColor} border px-4 py-3 rounded-lg flex items-center gap-2 animate-pulse">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        ${icon}
+                    </svg>
+                    ${message}
+                </div>
+            `;
+            
+            setTimeout(() => container.innerHTML = '', 4000);
+        }
+
+        function logout() {
+            if (confirm('Do you really want to log out?')) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('activeProjectTab');
+                window.location.href = '/users/login-form';
+            }
+        }
+
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        if (sidebarToggle) {
+            sidebarToggle.addEventListener('click', () => {
+                const sidebar = document.getElementById('sidebar');
+                if (sidebar) {
+                    sidebar.classList.toggle('-translate-x-full');
+                }
+            });
+        }
+
+        document.getElementById('projectModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'projectModal') {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('projectModal');
+                if (modal && !modal.classList.contains('hidden')) {
+                    closeModal();
+                }
+            }
+        });
+    </script>
+    <script>
+
+(function() {
+    'use strict';
+    
+    console.log(' [HEADER] Initialisation du badge header');
+    
+    const BADGE_ID = 'notifBadgeHeader';
+    let retryCount = 0;
+    const MAX_RETRIES = 15;
+    
+    function updateHeaderBadge(count) {
+        const badge = document.getElementById(BADGE_ID);
+        
+        if (!badge) {
+            console.warn('[HEADER] Badge header non trouvé');
+            return;
+        }
+        
+        console.log(' [HEADER] Mise à jour badge header:', count);
+        
+        if (count > 0) {
+            badge.textContent = count > 99 ? '99+' : count;
+            badge.classList.remove('hidden');
+            badge.style.display = 'flex';
+        } else {
+            badge.classList.add('hidden');
+            badge.style.display = 'none';
+        }
+    }
+    
+
+    window.addEventListener('notificationCountUpdated', (event) => {
+        console.log(' [HEADER] Event reçu:', event.detail);
+        if (event.detail && typeof event.detail.unreadCount === 'number') {
+            updateHeaderBadge(event.detail.unreadCount);
+        }
+    });
+    
+    //  Initialisation avec retry
+    function init() {
+        console.log(` [HEADER] Tentative init ${retryCount + 1}/${MAX_RETRIES}`);
+        
+        if (window.NotificationSync && window.NotificationSync.isInitialized()) {
+            const count = window.NotificationSync.getCount();
+            console.log(' [HEADER] NotificationSync prêt, count:', count);
+            updateHeaderBadge(count);
+        } else if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            setTimeout(init, 300);
+        } else {
+            console.error(' [HEADER] Timeout - Tentative fallback');
+            fetchCountManually();
+        }
+    }
+    
+  
+    async function fetchCountManually() {
+        try {
+            const token = localStorage.getItem('token') || localStorage.getItem('jwt_token');
+            if (!token) {
+                console.warn(' [HEADER] Pas de token pour fallback');
+                return;
+            }
+            
+            const response = await fetch('/notifications/count', {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log(' [HEADER] Count récupéré manuellement:', data.count);
+                updateHeaderBadge(data.count);
+            } else {
+                console.error(' [HEADER] Erreur API:', response.status);
+            }
+        } catch (error) {
+            console.error(' [HEADER] Erreur récupération manuelle:', error);
+        }
+    }
+    
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        setTimeout(init, 100);
+    }
+    
+    console.log(' [HEADER] Script badge header chargé');
+})();
+</script>
+</body>
+</html>

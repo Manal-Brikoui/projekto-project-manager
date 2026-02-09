@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - ProjectManager</title>
+    <style>
+       
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+       
+        .settings-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        
+        .settings-header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-top: 2rem;
+        }
+
+        .header-logo {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1rem;
+        }
+
+        .header-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #2C8E99, #48C0C4);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+       
+        .tabs-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #e2e8f0;
+            overflow-x: auto;
+            background: white;
+            border-radius: 1rem 1rem 0 0;
+            padding: 0 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .tab-button {
+            padding: 1rem 1.5rem;
+            background: none;
+            border: none;
+            color: #64748b;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            color: #2C8E99;
+        }
+
+        .tab-button.active {
+            color: #2C8E99;
+        }
+
+        .tab-button.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(to right, #2C8E99, #48C0C4);
+            border-radius: 2px 2px 0 0;
+        }
+
+        
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+       
+        .card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2C8E99;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .card-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+       
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #334155;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            color: #1e293b;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #48C0C4;
+            box-shadow: 0 0 0 3px rgba(72, 192, 196, 0.1);
+            background: white;
+        }
+
+        .form-input:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #f1f5f9;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+       
+        .btn {
+            padding: 0.875rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2C8E99, #48C0C4);
+            color: white;
+            box-shadow: 0 4px 6px rgba(44, 142, 153, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(44, 142, 153, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2C8E99;
+            border: 2px solid #2C8E99;
+        }
+
+        .btn-secondary:hover {
+            background: #f0f9fa;
+        }
+
+        .btn-danger {
+            background: white;
+            color: #ef4444;
+            border: 2px solid #ef4444;
+        }
+
+        .btn-danger:hover {
+            background: #fef2f2;
+        }
+
+        .btn-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+      
+        .profile-avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f0f9fa 0%, #e6f7f9 100%);
+            border-radius: 1rem;
+        }
+
+        .avatar-container {
+            position: relative;
+        }
+
+        .avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2C8E99, #48C0C4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            border: 4px solid white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 32px;
+            height: 32px;
+            background: #48C0C4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid white;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .avatar-upload:hover {
+            transform: scale(1.1);
+            background: #2C8E99;
+        }
+
+        .avatar-upload-icon {
+            width: 16px;
+            height: 16px;
+            color: white;
+        }
+
+        .avatar-info h3 {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .avatar-info p {
+            color: #64748b;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            background: linear-gradient(135deg, #2C8E99, #48C0C4);
+            color: white;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            display: none;
+            border-left: 4px solid;
+        }
+
+        .alert.show {
+            display: block;
+            animation: slideDown 0.3s;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .alert-success {
+            background: #f0fdf4;
+            border-color: #22c55e;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .password-strength {
+            margin-top: 0.5rem;
+        }
+
+        .strength-bar {
+            height: 4px;
+            background: #e2e8f0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 0.5rem;
+        }
+
+        .strength-fill {
+            height: 100%;
+            transition: all 0.3s;
+            width: 0%;
+        }
+
+        .strength-weak { background: #ef4444; width: 33%; }
+        .strength-medium { background: #f59e0b; width: 66%; }
+        .strength-strong { background: #22c55e; width: 100%; }
+
+        .strength-text {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+        /* Password Requirements Indicators */
+.password-requirements {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.requirement {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: rgba(30, 41, 59, 0.5);
+    transition: all 0.3s ease;
+}
+
+.requirement-icon {
+    font-size: 14px;
+    font-weight: bold;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.requirement.valid {
+    color: #22c55e;
+}
+
+.requirement.valid .requirement-icon::before {
+    content: "✓";
+}
+
+.requirement.invalid {
+    color: rgba(30, 41, 59, 0.5);
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: rgba(30, 41, 59, 0.5);
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.3s;
+}
+
+.password-toggle-btn:hover {
+    color: rgba(30, 41, 59, 0.8);
+}
+
+       
+        .back-button {
+            position: fixed;
+            top: 2rem;
+            left: 2rem;
+            padding: 0.75rem 1rem;
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            color: #2C8E99;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+
+        .back-button:hover {
+            background: #f0f9fa;
+            border-color: #48C0C4;
+            transform: translateX(-5px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-icon {
+            width: 1.25rem;
+            height: 1.25rem;
+        }
+
+       
+        .info-box {
+            background: #f0f9fa;
+            border: 1px solid #b8e5ea;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            color: #0f5960;
+            margin-bottom: 1.5rem;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s;
+            background: white;
+            position: relative;
+        }
+
+        .notification-item:hover {
+            border-color: #48C0C4;
+            box-shadow: 0 2px 8px rgba(72, 192, 196, 0.15);
+        }
+
+        .notification-item.unread {
+            border-left: 4px solid #48C0C4;
+            background: linear-gradient(to right, #f0f9fa 0%, white 100%);
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .notification-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification-icon.comment {
+            background: linear-gradient(135deg, #48C0C4, #2C8E99);
+        }
+
+        .notification-icon.assignment {
+            background: linear-gradient(135deg, #2C8E99, #1A435E);
+        }
+
+        .notification-icon.mention {
+            background: linear-gradient(135deg, #48C0C4, #2C8E99);
+        }
+
+        .notification-icon.update {
+            background: linear-gradient(135deg, #1A435E, #0B243B);
+        }
+
+        .notification-icon svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            color: white;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-message {
+            color: #1e293b;
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .notification-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .notification-action-btn {
+            padding: 0.5rem;
+            background: none;
+            border: none;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 0.25rem;
+            transition: all 0.2s;
+        }
+
+        .notification-action-btn:hover {
+            background: #f1f5f9;
+            color: #2C8E99;
+        }
+
+        .notification-unread-dot {
+            width: 8px;
+            height: 8px;
+            background: #48C0C4;
+            border-radius: 50%;
+            box-shadow: 0 0 0 3px rgba(72, 192, 196, 0.2);
+            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Back Button -->
+<a href="#" class="back-button" onclick="goBack(event)">
+    <svg class="back-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+    </svg>
+    Back to Dashboard
+</a>
+
+<div class="settings-container">
+    <!-- Header -->
+    <div class="settings-header">
+        <img src="/images/Adobe.png" alt="ProjectManager" class="header-logo">
+        <h1 class="header-title">Settings</h1>
+        <p class="header-subtitle">Manage your profile and preferences</p>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-container">
+        <button class="tab-button active" onclick="switchTab('profile', event)">
+            Profile
+        </button>
+        <button class="tab-button" onclick="switchTab('security', event)">
+            Security
+        </button>
+        <button class="tab-button" onclick="switchTab('notifications', event)">
+            Notifications
+        </button>
+        <button class="tab-button" onclick="switchTab('danger', event)">
+            Danger Zone
+        </button>
+    </div>
+
+    <!-- Alerts -->
+    <div id="successAlert" class="alert alert-success"></div>
+    <div id="errorAlert" class="alert alert-error"></div>
+
+    <!-- TAB: Profile -->
+    <div id="profileTab" class="tab-content active">
+        <div class="card">
+            <h2 class="card-title">
+                <svg class="card-icon" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                </svg>
+                Profile Information
+            </h2>
+
+            <div class="profile-avatar-section">
+                <div class="avatar-container">
+                    <div class="avatar" id="avatarDisplay">U</div>
+                    <div class="avatar-upload" onclick="alert('Feature coming soon')">
+                        <svg class="avatar-upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                    </div>
+                </div>
+                <div class="avatar-info">
+                    <h3 id="displayName">Loading...</h3>
+                    <p id="displayEmail">email@example.com</p>
+                    <span class="badge" id="displayRole">User</span>
+                </div>
+            </div>
+
+            <form id="profileForm">
+                <div class="form-group">
+                    <label class="form-label">Full Name</label>
+                    <input type="text" id="userName" class="form-input" placeholder="Your name">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" id="userEmail" class="form-input" placeholder="your.email@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <input type="text" id="userRole" class="form-input" disabled>
+                </div>
+
+                <button type="submit" class="btn btn-primary">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TAB: Security -->
+    <div id="securityTab" class="tab-content">
+        <div class="card">
+            <h2 class="card-title">
+                <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                </svg>
+                Change Password
+            </h2>
+
+            <div class="info-box">
+                <strong>Security Requirements:</strong> Your password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character.
+            </div>
+
+            <form id="passwordForm">
+    <!-- Current Password avec icône œil -->
+    <div class="form-group">
+        <label class="form-label">Current Password</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <input 
+                type="password" 
+                id="currentPassword" 
+                class="form-input" 
+                placeholder="••••••••"
+                style="padding-right: 45px;"
+            >
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('currentPassword', this)">
+                <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg class="eye-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- New Password avec icône œil + indicateurs -->
+    <div class="form-group">
+        <label class="form-label">New Password</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <input 
+                type="password" 
+                id="newPassword" 
+                class="form-input" 
+                placeholder="••••••••" 
+                oninput="checkPasswordStrengthWithRequirements()"
+                style="padding-right: 45px;"
+            >
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('newPassword', this)">
+                <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg class="eye-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+            </button>
+        </div>
+        
+        <!-- Barre de force (existante) -->
+        <div class="password-strength">
+            <div class="strength-bar">
+                <div id="strengthFill" class="strength-fill"></div>
+            </div>
+            <p id="strengthText" class="strength-text">
+                Enter a password to see its strength
+            </p>
+        </div>
+
+        <!-- NOUVEAUX INDICATEURS VISUELS -->
+        <div class="password-requirements">
+            <div class="requirement" id="req-length">
+                <span class="requirement-icon">○</span>
+                <span>At least 8 characters</span>
+            </div>
+            <div class="requirement" id="req-uppercase">
+                <span class="requirement-icon">○</span>
+                <span>One uppercase letter (A-Z)</span>
+            </div>
+            <div class="requirement" id="req-lowercase">
+                <span class="requirement-icon">○</span>
+                <span>One lowercase letter (a-z)</span>
+            </div>
+            <div class="requirement" id="req-number">
+                <span class="requirement-icon">○</span>
+                <span>One number (0-9)</span>
+            </div>
+            <div class="requirement" id="req-special">
+                <span class="requirement-icon">○</span>
+                <span>One special character (!@#$%...)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Password avec icône œil -->
+    <div class="form-group">
+        <label class="form-label">Confirm New Password</label>
+        <div style="position: relative; display: flex; align-items: center;">
+            <input 
+                type="password" 
+                id="confirmPassword" 
+                class="form-input" 
+                placeholder="••••••••"
+                style="padding-right: 45px;"
+            >
+            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('confirmPassword', this)">
+                <svg class="eye-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                <svg class="eye-off-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary">
+        <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
+        </svg>
+        Change Password
+    </button>
+</form>
+        </div>
+    </div>
+
+    <!-- TAB: Notifications -->
+    <div id="notificationsTab" class="tab-content">
+        <div class="card">
+            <h2 class="card-title">
+                <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                </svg>
+                My Notifications
+                <span id="notifCountBadge" class="badge" style="margin-left: auto; display: none;">0</span>
+            </h2>
+
+            <!-- Quick Actions -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem;">
+                <button onclick="markAllAsRead()" class="btn btn-secondary">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Mark All as Read
+                </button>
+                <button onclick="deleteAllNotifications()" class="btn btn-danger">
+                    <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                    Delete All
+                </button>
+            </div>
+
+            <!-- Notifications List -->
+            <div id="notificationsList" style="max-height: 600px; overflow-y: auto;">
+                <!-- Loader -->
+                <div id="notificationsLoader" style="text-align: center; padding: 2rem; color: #64748b;">
+                    <svg style="width: 3rem; height: 3rem; margin: 0 auto; animation: spin 1s linear infinite;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <p style="margin-top: 1rem;">Loading notifications...</p>
+                </div>
+
+                <!-- Empty Message -->
+                <div id="noNotifications" style="display: none; text-align: center; padding: 3rem; color: #64748b;">
+                    <svg style="width: 4rem; height: 4rem; margin: 0 auto 1rem; opacity: 0.5;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/>
+                    </svg>
+                    <p style="font-size: 1.125rem; font-weight: 600;">No Notifications</p>
+                    <p style="margin-top: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                        You're all caught up!
+                        <svg style="width: 1.25rem; height: 1.25rem; color: #22c55e;" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </p>
+                </div>
+
+                <!-- Notifications Container -->
+                <div id="notificationsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TAB: Danger Zone -->
+    <div id="dangerTab" class="tab-content">
+        <div class="card">
+            <h2 class="card-title" style="color: #ef4444;">
+                <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                Account Deletion
+            </h2>
+
+            <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 1rem; color: #991b1b; margin-bottom: 2rem;">
+                <strong>EXTREME DANGER</strong><br>
+                Once your account is deleted, all your data will be permanently lost:
+                <ul style="margin-top: 0.5rem; margin-left: 1.5rem;">
+                    <li><strong>All your created projects</strong> (<span id="projectCountBadge" style="color: #dc2626; font-weight: 700;">Loading...</span> project<span id="projectPlural">s</span>) and their complete contents</li>
+                    <li>All your assigned tasks</li>
+                    <li>All your comments and files</li>
+                    <li>All your notifications</li>
+                    <li>Your access to shared projects</li>
+                </ul>
+            </div>
+
+            <button onclick="confirmDeleteAccountWithProjects()" class="btn btn-danger">
+                <svg class="btn-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                </svg>
+                Delete My Account and All My Projects
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Global variables
+let currentUser = null;
+let token = null;
+
+// Initialization
+document.addEventListener('DOMContentLoaded', async () => {
+    token = localStorage.getItem('token');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+
+    if (!token || !user.id) {
+        window.location.href = '/users/login-form';
+        return;
+    }
+
+    await loadUserData();
+});
+
+// Load user data
+async function loadUserData() {
+    try {
+        const response = await fetch('/users/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Not authenticated');
+
+        currentUser = await response.json();
+        displayUserData();
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Error loading data');
+        setTimeout(() => window.location.href = '/users/login-form', 2000);
+    }
+}
+
+// Display data
+function displayUserData() {
+    // Avatar
+    const initials = currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase();
+    document.getElementById('avatarDisplay').textContent = initials;
+
+    // Header
+    document.getElementById('displayName').textContent = currentUser.name;
+    document.getElementById('displayEmail').textContent = currentUser.email;
+    document.getElementById('displayRole').textContent = currentUser.role === 'ROLE_CHEF_PROJET' ? 'Project Manager' : 'Engineer';
+
+    // Form
+    document.getElementById('userName').value = currentUser.name;
+    document.getElementById('userEmail').value = currentUser.email;
+    document.getElementById('userRole').value = currentUser.role === 'ROLE_CHEF_PROJET' ? 'Project Manager' : 'Engineer';
+}
+
+// Switch tabs
+function switchTab(tabName, event) {
+    document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    event.target.classList.add('active');
+    document.getElementById(tabName + 'Tab').classList.add('active');
+    
+    if (tabName === 'danger') {
+        loadProjectCount();
+    }
+    
+    if (tabName === 'notifications') {
+        loadNotifications();
+    }
+}
+
+// Update profile
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const name = document.getElementById('userName').value;
+    const email = document.getElementById('userEmail').value;
+
+    try {
+        const response = await fetch(`/users/edit/${currentUser.id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ name, email })
+        });
+
+        if (!response.ok) throw new Error('Update error');
+
+        currentUser.name = name;
+        currentUser.email = email;
+        localStorage.setItem('user', JSON.stringify(currentUser));
+
+        displayUserData();
+        showSuccess('Profile updated successfully');
+    } catch (error) {
+        showError('Error updating profile');
+    }
+});
+
+// Change password
+document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+
+    if (newPassword !== confirmPassword) {
+        showError('Passwords do not match');
+        return;
+    }
+
+    if (!isStrongPassword(newPassword)) {
+        showError('Password does not meet security requirements');
+        return;
+    }
+
+    try {
+        const response = await fetch('/users/change-password', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ currentPassword, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            showError(data.message || 'Error changing password');
+            return;
+        }
+
+        showSuccess('Password changed successfully');
+        document.getElementById('passwordForm').reset();
+        document.getElementById('strengthFill').className = 'strength-fill';
+        document.getElementById('strengthText').textContent = 'Enter a password to see its strength';
+    } catch (error) {
+        showError('Error changing password');
+    }
+});
+
+// Check password strength
+// NOUVELLE fonction qui combine barre de force + indicateurs visuels
+function checkPasswordStrengthWithRequirements() {
+    const password = document.getElementById('newPassword').value;
+    const fill = document.getElementById('strengthFill');
+    const text = document.getElementById('strengthText');
+
+    // Si vide, reset tout
+    if (!password) {
+        fill.className = 'strength-fill';
+        text.textContent = 'Enter a password to see its strength';
+        text.style.color = '#64748b';
+        
+        // Reset les indicateurs visuels
+        ['req-length', 'req-uppercase', 'req-lowercase', 'req-number', 'req-special'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.classList.remove('valid', 'invalid');
+            }
+        });
+        return;
+    }
+
+    // Vérifier chaque exigence et mettre à jour les indicateurs
+    const requirements = {
+        length: password.length >= 8,
+        uppercase: /[A-Z]/.test(password),
+        lowercase: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()\-_=+{};:,<.>?\/\[\]\\|`~]/.test(password)
+    };
+
+    // Mettre à jour les indicateurs visuels
+    document.getElementById('req-length').classList.toggle('valid', requirements.length);
+    document.getElementById('req-length').classList.toggle('invalid', !requirements.length);
+    
+    document.getElementById('req-uppercase').classList.toggle('valid', requirements.uppercase);
+    document.getElementById('req-uppercase').classList.toggle('invalid', !requirements.uppercase);
+    
+    document.getElementById('req-lowercase').classList.toggle('valid', requirements.lowercase);
+    document.getElementById('req-lowercase').classList.toggle('invalid', !requirements.lowercase);
+    
+    document.getElementById('req-number').classList.toggle('valid', requirements.number);
+    document.getElementById('req-number').classList.toggle('invalid', !requirements.number);
+    
+    document.getElementById('req-special').classList.toggle('valid', requirements.special);
+    document.getElementById('req-special').classList.toggle('invalid', !requirements.special);
+
+    // Calculer la force globale (barre existante)
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[!@#$%^&*()\-_=+{};:,<.>?\/\[\]\\|`~]/.test(password)) strength++;
+
+    fill.className = 'strength-fill';
+    if (strength < 3) {
+        fill.classList.add('strength-weak');
+        text.textContent = 'Weak password';
+        text.style.color = '#ef4444';
+    } else if (strength < 5) {
+        fill.classList.add('strength-medium');
+        text.textContent = 'Medium password';
+        text.style.color = '#f59e0b';
+    } else {
+        fill.classList.add('strength-strong');
+        text.textContent = 'Strong password';
+        text.style.color = '#22c55e';
+    }
+}
+// Toggle password visibility 
+function togglePasswordVisibility(fieldId, button) {
+    const input = document.getElementById(fieldId);
+    const eyeIcon = button.querySelector('.eye-icon');
+    const eyeOffIcon = button.querySelector('.eye-off-icon');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeIcon.style.display = 'none';
+        eyeOffIcon.style.display = 'block';
+    } else {
+        input.type = 'password';
+        eyeIcon.style.display = 'block';
+        eyeOffIcon.style.display = 'none';
+    }
+}
+
+// Validate strong password
+function isStrongPassword(password) {
+    if (password.length < 8) return false;
+    if (!/[A-Z]/.test(password)) return false;
+    if (!/[a-z]/.test(password)) return false;
+    if (!/[0-9]/.test(password)) return false;
+    if (!/[!@#$%^&*()\-_=+{};:,<.>?\/\[\]\\|`~]/.test(password)) return false;
+    return true;
+}
+
+function goBack(event) {
+    event.preventDefault();
+    window.history.back();
+}
+
+
+let notifications = [];
+
+async function loadNotifications() {
+    const loader = document.getElementById('notificationsLoader');
+    const container = document.getElementById('notificationsContainer');
+    const noNotif = document.getElementById('noNotifications');
+    const badge = document.getElementById('notifCountBadge');
+
+    loader.style.display = 'block';
+    container.innerHTML = '';
+    noNotif.style.display = 'none';
+
+    try {
+        const response = await fetch('/notifications/me', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Loading error');
+
+        notifications = await response.json();
+        loader.style.display = 'none';
+
+        if (notifications.length === 0) {
+            noNotif.style.display = 'block';
+            badge.style.display = 'none';
+            return;
+        }
+
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        if (unreadCount > 0) {
+            badge.textContent = unreadCount;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+
+        notifications.forEach(notif => {
+            container.appendChild(createNotificationElement(notif));
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        loader.style.display = 'none';
+        showError('Error loading notifications');
+    }
+}
+
+function formatExactDate(dateString) {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    const dateOptions = {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+
+    const timeOptions = {
+        hour: '2-digit',
+        minute: '2-digit'
+    };
+
+    if (date.toDateString() === now.toDateString()) {
+        if (diffInSeconds < 60) {
+            return 'Just now';
+        } else if (diffInSeconds < 3600) {
+            return `${Math.floor(diffInSeconds / 60)} min ago`;
+        } else {
+            return `Today at ${date.toLocaleTimeString('en-US', timeOptions)}`;
+        }
+    }
+
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (date.toDateString() === yesterday.toDateString()) {
+        return `Yesterday at ${date.toLocaleTimeString('en-US', timeOptions)}`;
+    }
+
+    if (diffInSeconds < 7 * 24 * 3600) {
+        const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        return `${days[date.getDay()]} at ${date.toLocaleTimeString('en-US', timeOptions)}`;
+    }
+
+    if (date.getFullYear() === now.getFullYear()) {
+        return `${date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' })} at ${date.toLocaleTimeString('en-US', timeOptions)}`;
+    }
+
+    return `${date.toLocaleDateString('en-US', dateOptions)} at ${date.toLocaleTimeString('en-US', timeOptions)}`;
+}
+
+function getNotificationIcon(type) {
+    const icons = {
+        comment: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>',
+        assignment: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>',
+        mention: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"/></svg>',
+        update: '<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>'
+    };
+    return icons[type] || icons.update;
+}
+
+function createNotificationElement(notif) {
+    const div = document.createElement('div');
+    div.className = `notification-item ${!notif.is_read ? 'unread' : ''}`;
+    div.id = `notif-${notif.id}`;
+
+    const iconType = getNotificationIcon(notif.type);
+    const exactDate = formatExactDate(notif.created_at);
+
+    div.innerHTML = `
+        <div class="notification-header">
+            <div class="notification-icon ${notif.type}">
+                ${iconType}
+            </div>
+            <div class="notification-content">
+                <p class="notification-message">${notif.message}</p>
+                <div class="notification-meta">
+                    ${!notif.is_read ? '<span class="notification-unread-dot"></span>' : ''}
+                    <span style="display: flex; align-items: center; gap: 0.25rem;">
+                        <svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                        ${exactDate}
+                    </span>
+                    ${notif.sender_name ? `
+                        <span style="display: flex; align-items: center; gap: 0.25rem;">
+                            <svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <strong>${notif.sender_name}</strong>
+                        </span>
+                    ` : ''}
+                    ${notif.project_title ? `
+                        <span style="display: flex; align-items: center; gap: 0.25rem;">
+                            <svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+                            </svg>
+                            ${notif.project_title}
+                        </span>
+                    ` : ''}
+                    ${notif.task_title ? `
+                        <span style="display: flex; align-items: center; gap: 0.25rem;">
+                            <svg style="width: 0.875rem; height: 0.875rem;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+                            </svg>
+                            ${notif.task_title}
+                        </span>
+                    ` : ''}
+                </div>
+            </div>
+            <div class="notification-actions">
+                ${!notif.is_read ? `
+                    <button class="notification-action-btn" onclick="markNotificationAsRead(${notif.id})" title="Mark as read">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </button>
+                ` : ''}
+                <button class="notification-action-btn" onclick="deleteNotification(${notif.id})" title="Delete">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    `;
+
+    return div;
+}
+
+async function markNotificationAsRead(id) {
+    try {
+        const response = await fetch(`/notifications/mark-read/${id}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error');
+
+        const notifElement = document.getElementById(`notif-${id}`);
+        if (notifElement) {
+            notifElement.classList.remove('unread');
+            notifElement.querySelector('.notification-actions').innerHTML = `
+                <button class="notification-action-btn" onclick="deleteNotification(${id})" title="Delete">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 1.25rem; height: 1.25rem;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            `;
+        }
+
+        await loadNotifications();
+
+    } catch (error) {
+        showError('Error marking notification');
+    }
+}
+
+async function markAllAsRead() {
+    if (!confirm('Mark all notifications as read?')) return;
+
+    try {
+        const response = await fetch('/notifications/mark-all-read', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error');
+
+        showSuccess('All notifications marked as read');
+        await loadNotifications();
+
+    } catch (error) {
+        showError('Error marking notifications');
+    }
+}
+
+async function deleteNotification(id) {
+    if (!confirm('Delete this notification?')) return;
+
+    try {
+        const response = await fetch(`/notifications/delete/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error');
+
+        const notifElement = document.getElementById(`notif-${id}`);
+        if (notifElement) {
+            notifElement.style.opacity = '0';
+            notifElement.style.transform = 'translateX(-100%)';
+            setTimeout(() => notifElement.remove(), 300);
+        }
+
+        showSuccess('Notification deleted');
+        await loadNotifications();
+
+    } catch (error) {
+        showError('Error deleting notification');
+    }
+}
+
+async function deleteAllNotifications() {
+    if (!confirm('Delete ALL notifications? This action is irreversible.')) return;
+
+    try {
+        const response = await fetch('/notifications/delete-all', {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) throw new Error('Error');
+
+        showSuccess('All notifications deleted');
+        await loadNotifications();
+
+    } catch (error) {
+        showError('Error deleting notifications');
+    }
+}
+
+
+async function loadProjectCount() {
+    try {
+        const response = await fetch('/projects/', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!response.ok) return;
+
+        const allProjects = await response.json();
+        const userProjects = allProjects.filter(
+            p => Number(p.creator_id) === Number(currentUser.id)
+        );
+
+        const badge = document.getElementById('projectCountBadge');
+        const plural = document.getElementById('projectPlural');
+        
+        if (badge) {
+            badge.textContent = `${userProjects.length}`;
+            badge.style.color = userProjects.length > 0 ? '#dc2626' : '#22c55e';
+        }
+        
+        if (plural) {
+            plural.textContent = userProjects.length > 1 ? 's' : '';
+        }
+    } catch (error) {
+        console.error('Error counting projects:', error);
+    }
+}
+
+async function confirmDeleteAccountWithProjects() {
+    let userProjects = [];
+    try {
+        const response = await fetch('/projects/', {
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (response.ok) {
+            const allProjects = await response.json();
+            userProjects = allProjects.filter(
+                p => Number(p.creator_id) === Number(currentUser.id)
+            );
+        }
+    } catch (error) {
+        console.error('Error loading projects:', error);
+    }
+
+    const projectCount = userProjects.length;
+    const projectList = userProjects.map(p => `  - ${p.title}`).join('\n');
+
+    const confirmed = confirm(
+        'CRITICAL WARNING\n\n' +
+        'Are you ABSOLUTELY sure you want to delete your account?\n\n' +
+        'THIS ACTION IS IRREVERSIBLE\n\n' +
+        'This deletion will result in:\n\n' +
+        `Deletion of ${projectCount} project${projectCount > 1 ? 's' : ''}:\n${projectList || '  - No projects'}\n\n` +
+        'Loss of ALL your data:\n' +
+        '  - All your tasks\n' +
+        '  - All your comments\n' +
+        '  - All your files\n' +
+        '  - All your notifications\n\n' +
+        'Click OK to continue to final confirmation'
+    );
+
+    if (!confirmed) return;
+
+    const finalConfirm = prompt(
+        'FINAL CONFIRMATION\n\n' +
+        'To confirm the PERMANENT deletion of your account\n' +
+        `and your ${projectCount} project${projectCount > 1 ? 's' : ''},\n\n` +
+        'Type exactly: DELETE ALL\n\n' +
+        '(in uppercase, with the space)'
+    );
+
+    if (finalConfirm !== 'DELETE ALL') {
+        showError('Deletion cancelled - Incorrect confirmation text');
+        return;
+    }
+
+    await deleteAccountAndProjects(userProjects);
+}
+
+async function deleteAccountAndProjects(userProjects) {
+    const totalSteps = userProjects.length + 1;
+    let currentStep = 0;
+
+    try {
+        showSuccess(`Deletion in progress... (0/${totalSteps})`);
+
+        for (const project of userProjects) {
+            try {
+                const response = await fetch(`/projects/delete/${project.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    currentStep++;
+                    showSuccess(`Deleting projects... (${currentStep}/${totalSteps})`);
+                } else {
+                    console.error(`Error deleting project ${project.id}`);
+                }
+            } catch (error) {
+                console.error(`Error project ${project.id}:`, error);
+            }
+        }
+
+        const accountResponse = await fetch(`/users/delete/${currentUser.id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (!accountResponse.ok) throw new Error('Account deletion error');
+
+        currentStep++;
+        showSuccess(`Deletion complete (${currentStep}/${totalSteps})`);
+
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        showSuccess('Account and projects deleted successfully. Redirecting...');
+
+        setTimeout(() => {
+            window.location.href = '/users/register-form';
+        }, 3000);
+
+    } catch (error) {
+        console.error('Deletion error:', error);
+        showError('Error during deletion. Some data may have been deleted.');
+    }
+}
+
+// Show success message
+function showSuccess(message) {
+    const alert = document.getElementById('successAlert');
+    alert.textContent = message;
+    alert.classList.add('show');
+
+    setTimeout(() => {
+        alert.classList.remove('show');
+    }, 5000);
+}
+
+// Show error message
+function showError(message) {
+    const alert = document.getElementById('errorAlert');
+    alert.textContent = message;
+    alert.classList.add('show');
+
+    setTimeout(() => {
+        alert.classList.remove('show');
+    }, 5000);
+}
+</script>
+
+</body>
+</html>

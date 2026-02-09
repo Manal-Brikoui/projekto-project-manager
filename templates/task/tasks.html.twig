@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Tasks</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'primary': {
+                            50: '#E8F4F5',
+                            100: '#D1E9EB',
+                            200: '#A3D3D7',
+                            300: '#48C0C4',
+                            400: '#2C8E99',
+                            500: '#1A435E',
+                            600: '#0B243B',
+                            700: '#081B2C',
+                            800: '#05121D',
+                            900: '#020A0F'
+                        },
+                        'accent': {
+                            light: '#48C0C4',
+                            DEFAULT: '#2C8E99',
+                            dark: '#1A435E'
+                        },
+                        'neutral': {
+                            light: '#D1D9E0',
+                            DEFAULT: '#FFFFFF'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+        }
+        .drag-over {
+            background-color: #E8F4F5;
+            border: 2px dashed #48C0C4;
+        }
+        .task-card {
+            cursor: move;
+            user-select: none;
+        }
+        .task-card:active {
+            cursor: grabbing;
+        }
+        .task-card[draggable="false"] {
+            cursor: default;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-neutral-light/20 via-white to-primary-50 min-h-screen">
+    <!-- Sidebar -->
+    {% include 'components/sidebar.html.twig' %}
+
+    <!-- Mobile Sidebar Toggle (Floating Button) -->
+    <button id="sidebarToggle" class="fixed top-4 left-4 z-50 lg:hidden p-2 bg-white rounded-lg shadow-lg">
+        <svg class="w-6 h-6 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+        </svg>
+    </button>
+
+    <!-- Main Content Wrapper -->
+    <div class="lg:ml-72">
+        <!-- Navigation -->
+        <nav class="bg-white shadow-md border-b border-neutral-light/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center gap-8">
+                        <!-- Mobile Menu Button -->
+                        <button id="sidebarToggleMobile" class="lg:hidden p-2 text-primary-600 hover:bg-primary-50 rounded-lg">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                        </button>
+                        <a href="/projects/dashboard" class="text-xl font-bold text-accent-light hover:text-accent transition flex items-center gap-2">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            Project Tasks
+                        </a>
+                    </div>
+                    <button onclick="history.back()" class="flex items-center gap-2 px-4 py-2 bg-primary-50 text-primary-600 rounded-lg hover:bg-primary-100 transition">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                        </svg>
+                        Back
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Header -->
+        <div class="bg-white shadow-sm border-b border-neutral-light/50">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 id="projectTitle" class="text-3xl font-bold text-primary-600">Tasks</h2>
+                        <p id="projectSubtitle" class="mt-1 text-primary-500/70">Manage your project tasks</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <span id="userRoleBadge" class="hidden px-3 py-1 rounded-full text-sm font-medium"></span>
+                        <button id="addTaskBtn" onclick="openModal()" class="hidden flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-light to-accent text-white rounded-lg hover:from-accent hover:to-accent-dark transition-all shadow-lg hover:shadow-xl">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            New Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="messageContainer" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4"></div>
+
+        <!-- Loading -->
+        <div id="loading" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+            <div class="w-16 h-16 border-4 border-accent-light border-t-transparent rounded-full animate-spin mx-auto"></div>
+            <p class="mt-4 text-primary-500">Loading tasks...</p>
+        </div>
+
+        <!-- Tasks Board (Kanban) -->
+        <div id="tasksContent" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
+                <!-- To Do -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-neutral-light/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-primary-600 flex items-center gap-2">
+                            <span class="w-3 h-3 bg-yellow-500 rounded-full"></span>
+                            To Do
+                        </h3>
+                        <span id="todoCount" class="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium">0</span>
+                    </div>
+                    <div id="todoTasks" class="space-y-3 min-h-[300px] drop-zone" data-status="to_do">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <!-- In Progress -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-neutral-light/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-primary-600 flex items-center gap-2">
+                            <span class="w-3 h-3 bg-accent-light rounded-full"></span>
+                            In Progress
+                        </h3>
+                        <span id="progressCount" class="px-3 py-1 bg-primary-100 text-primary-600 rounded-full text-sm font-medium">0</span>
+                    </div>
+                    <div id="progressTasks" class="space-y-3 min-h-[300px] drop-zone" data-status="in_progress">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+
+                <!-- Done -->
+                <div class="bg-white rounded-xl shadow-lg p-6 border border-neutral-light/30">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-bold text-primary-600 flex items-center gap-2">
+                            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+                            Done
+                        </h3>
+                        <span id="doneCount" class="px-3 py-1 bg-green-100 text-green-700 rounded-full text-sm font-medium">0</span>
+                    </div>
+                    <div id="doneTasks" class="space-y-3 min-h-[300px] drop-zone" data-status="done">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Create/Edit Task -->
+        <div id="taskModal" class="hidden fixed inset-0 bg-primary-600/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-neutral-light/30">
+                <div class="sticky top-0 bg-gradient-to-r from-accent-light to-accent text-white p-6 rounded-t-2xl">
+                    <div class="flex items-center gap-3">
+                        <svg id="modalIcon" class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        <h2 id="modalTitle" class="text-2xl font-bold">Create New Task</h2>
+                    </div>
+                </div>
+
+                <div class="p-6 space-y-4">
+                    <input type="hidden" id="taskId">
+                    
+                    <div>
+                        <label class="block text-sm font-semibold text-primary-600 mb-2">Task Title *</label>
+                        <input type="text" id="taskTitle" required class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent" placeholder="e.g., Develop REST API">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-semibold text-primary-600 mb-2">Problem Description *</label>
+                        <textarea id="taskDescription" required rows="4" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent resize-none" placeholder="Describe the task in detail..."></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-primary-600 mb-2">Assign To *</label>
+                            <select id="assignedUser" required class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent">
+                                <option value="">Select a user</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-primary-600 mb-2">Status</label>
+                            <select id="taskStatus" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent">
+                                <option value="to_do">To Do</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="done">Done</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-primary-600 mb-2">Start Date</label>
+                            <input type="date" id="taskStartDate" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent" onchange="updateMinUpdateDate()">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-primary-600 mb-2">Update Date</label>
+                            <input type="date" id="taskUpdateDate" class="w-full px-4 py-3 border border-neutral-light rounded-lg focus:ring-2 focus:ring-accent-light focus:border-transparent">
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3 pt-4">
+                        <button onclick="closeModal()" class="flex-1 px-6 py-3 border border-neutral-light text-primary-500 rounded-lg hover:bg-primary-50 transition-all font-medium">
+                            Cancel
+                        </button>
+                        <button onclick="saveTask()" class="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-accent-light to-accent text-white rounded-lg hover:from-accent hover:to-accent-dark transition-all font-medium shadow-lg hover:shadow-xl">
+                            <svg id="submitIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            <span id="submitBtn">Create Task</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let projectId = null;
+        let currentUserId = null;
+        let isProjectOwner = false;
+        let projectCreatorId = null;
+        let allUsers = [];
+        let projectMembers = [];
+        let allTasks = [];
+        let currentProject = null;
+        function setMinDateToToday() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('taskStartDate').setAttribute('min', today);
+    document.getElementById('taskUpdateDate').setAttribute('min', today);
+}
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const token = localStorage.getItem('token');
+            const user = JSON.parse(localStorage.getItem('user') || '{}');
+            currentUserId = user.id;
+
+            if (!token || !currentUserId) {
+                window.location.href = '/users/login-form';
+                return;
+            }
+
+            const pathParts = window.location.pathname.split('/');
+            projectId = pathParts[pathParts.length - 2];
+            // Set minimum date to today for date inputs
+            setMinDateToToday();
+
+            await loadProject();
+            await loadUsers();
+            await loadTasks();
+        });
+
+        async function loadProject() {
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Project not found');
+                }
+                
+                currentProject = await response.json();
+                console.log('Project loaded:', currentProject);
+                
+                document.getElementById('projectTitle').textContent = `Tasks - ${currentProject.title}`;
+                
+                projectCreatorId = currentProject.creator_ids?.[0] || null;
+                isProjectOwner = projectCreatorId === currentUserId;
+                
+                console.log('Creator ID:', projectCreatorId);
+                console.log('Current User ID:', currentUserId);
+                console.log('Is Owner:', isProjectOwner);
+                console.log('Project Members IDs:', currentProject.creator_ids);
+                
+                const roleBadge = document.getElementById('userRoleBadge');
+                roleBadge.classList.remove('hidden');
+                
+                if (isProjectOwner) {
+                    roleBadge.innerHTML = `
+                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                        Owner
+                    `;
+                    roleBadge.className = 'px-3 py-1 bg-yellow-100 text-yellow-700 rounded-full text-sm font-medium';
+                    document.getElementById('addTaskBtn').classList.remove('hidden');
+                    document.getElementById('projectSubtitle').textContent = 'Create and manage tasks - Drag and drop to change status';
+                } else {
+                    roleBadge.innerHTML = `
+                        <svg class="w-4 h-4 inline mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/>
+                        </svg>
+                        Member
+                    `;
+                    roleBadge.className = 'px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-medium';
+                    document.getElementById('projectSubtitle').textContent = 'View your tasks - Drag and drop your tasks to change their status';
+                }
+                
+            } catch (error) {
+                console.error('Error loading project:', error);
+                showMessage('Unable to load project', 'error');
+                setTimeout(() => window.location.href = '/projects/dashboard', 2000);
+            }
+        }
+
+        async function loadUsers() {
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch('/users/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Error');
+                
+                allUsers = await response.json();
+                console.log('All users loaded:', allUsers.length);
+                
+                if (currentProject && currentProject.creator_ids) {
+                    projectMembers = allUsers.filter(user => 
+                        currentProject.creator_ids.includes(user.id)
+                    );
+                    console.log('Project members:', projectMembers.length, projectMembers);
+                } else {
+                    projectMembers = [];
+                }
+                
+                populateUserSelect();
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+
+        function populateUserSelect() {
+            const select = document.getElementById('assignedUser');
+            const roleLabels = {
+                'ROLE_CHEF_PROJET': 'Project Manager',
+                'ROLE_INGENIEUR': 'Engineer'
+            };
+            
+            if (projectMembers.length === 0) {
+                select.innerHTML = '<option value="">No members available</option>';
+                return;
+            }
+            
+            select.innerHTML = '<option value="">Select a member</option>' +
+                projectMembers.map(u => {
+                    const roleLabel = roleLabels[u.role] || u.role;
+                    const isOwner = u.id === projectCreatorId ? ' (Owner)' : '';
+                    const isMe = u.id === currentUserId ? ' (You)' : '';
+                    return `<option value="${u.id}">${u.name}${isOwner}${isMe} - ${roleLabel}</option>`;
+                }).join('');
+            
+            console.log('Select populated with', projectMembers.length, 'members');
+        }
+
+        async function loadTasks() {
+            const token = localStorage.getItem('token');
+            
+            try {
+                console.log('Loading tasks...');
+                
+                const response = await fetch('/tasks/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Response error:', errorText);
+                    throw new Error('Error loading tasks: ' + response.status);
+                }
+                
+                allTasks = await response.json();
+                console.log('Total tasks loaded:', allTasks.length);
+                
+                const projectTasks = allTasks.filter(t => t.project_id == projectId);
+                console.log('Project tasks', projectId, ':', projectTasks.length);
+                
+                displayTasks(projectTasks);
+            } catch (error) {
+                console.error('Error loading tasks:', error);
+                showMessage('Unable to load tasks: ' + error.message, 'error');
+            } finally {
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('tasksContent').classList.remove('hidden');
+            }
+        }
+
+        function displayTasks(tasks) {
+            const todoContainer = document.getElementById('todoTasks');
+            const progressContainer = document.getElementById('progressTasks');
+            const doneContainer = document.getElementById('doneTasks');
+
+            todoContainer.innerHTML = '';
+            progressContainer.innerHTML = '';
+            doneContainer.innerHTML = '';
+
+            const todoTasks = tasks.filter(t => t.status === 'to_do');
+            const progressTasks = tasks.filter(t => t.status === 'in_progress');
+            const doneTasks = tasks.filter(t => t.status === 'done');
+
+            document.getElementById('todoCount').textContent = todoTasks.length;
+            document.getElementById('progressCount').textContent = progressTasks.length;
+            document.getElementById('doneCount').textContent = doneTasks.length;
+
+            todoTasks.forEach(task => {
+                todoContainer.innerHTML += createTaskCard(task);
+            });
+            progressTasks.forEach(task => {
+                progressContainer.innerHTML += createTaskCard(task);
+            });
+            doneTasks.forEach(task => {
+                doneContainer.innerHTML += createTaskCard(task);
+            });
+
+            if (tasks.length === 0) {
+                todoContainer.innerHTML = '<p class="text-primary-500/70 text-sm text-center py-8">No tasks</p>';
+            }
+
+            setTimeout(() => initializeDragAndDrop(), 100);
+        }
+
+        function createTaskCard(task) {
+            const isTaskOwner = task.user_id === currentUserId;
+            const canEdit = isProjectOwner;
+            const canDrag = isProjectOwner || isTaskOwner;
+            
+            return `
+                <div class="task-card bg-primary-50/50 rounded-lg p-4 border border-neutral-light hover:shadow-md transition" 
+                     data-task-id="${task.id}"
+                     ${canDrag ? 'draggable="true"' : 'draggable="false"'}>
+                    <div class="flex items-start justify-between mb-2">
+                        <h4 class="font-semibold text-primary-600 flex-1">${task.title}</h4>
+                        <div class="flex items-center gap-2">
+                            ${canDrag ? `
+                                <svg class="w-5 h-5 text-primary-400 cursor-move" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
+                                </svg>
+                            ` : ''}
+                            ${canEdit ? `
+                                <button onclick="deleteTask(${task.id}, event)" class="p-1 text-red-600 hover:bg-red-50 rounded transition-all" title="Delete">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                    <p class="text-sm text-primary-500/70 mb-3 line-clamp-2">${task.problemdescription || 'No description'}</p>
+                    <div class="flex items-center justify-between text-xs">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            <span class="text-primary-500">${task.assigned_user || 'Unassigned'}</span>
+                            ${isTaskOwner ? '<span class="px-2 py-0.5 bg-accent-light/20 text-accent rounded-full font-medium">You</span>' : ''}
+                        </div>
+                        ${canEdit ? `
+                            <button onclick="editTask(${task.id})" class="flex items-center gap-1 text-accent hover:text-accent-dark font-medium">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                </svg>
+                                Edit
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function initializeDragAndDrop() {
+            const taskCards = document.querySelectorAll('.task-card[draggable="true"]');
+            const dropZones = document.querySelectorAll('.drop-zone');
+
+            taskCards.forEach(card => {
+                card.removeEventListener('dragstart', handleDragStart);
+                card.removeEventListener('dragend', handleDragEnd);
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            dropZones.forEach(zone => {
+                zone.removeEventListener('dragover', handleDragOver);
+                zone.removeEventListener('drop', handleDrop);
+                zone.removeEventListener('dragleave', handleDragLeave);
+                zone.addEventListener('dragover', handleDragOver);
+                zone.addEventListener('drop', handleDrop);
+                zone.addEventListener('dragleave', handleDragLeave);
+            });
+        }
+
+        let draggedTaskId = null;
+
+        function handleDragStart(e) {
+            draggedTaskId = e.target.dataset.taskId;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.drop-zone').forEach(zone => {
+                zone.classList.remove('drag-over');
+            });
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+
+        async function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+
+            const newStatus = e.currentTarget.dataset.status;
+            
+            if (draggedTaskId && newStatus) {
+                await updateTaskStatus(draggedTaskId, newStatus);
+            }
+        }
+
+        async function updateTaskStatus(taskId, newStatus) {
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`/tasks/edit/${taskId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Update error');
+                }
+
+                showMessage('Status updated successfully', 'success');
+                await loadTasks();
+            } catch (error) {
+                console.error('Update error:', error);
+                showMessage(error.message, 'error');
+                await loadTasks();
+            }
+        }
+
+        function openModal() {
+            if (!isProjectOwner) {
+                showMessage('Only the owner can create tasks', 'error');
+                return;
+            }
+            
+            document.getElementById('taskModal').classList.remove('hidden');
+            document.getElementById('modalTitle').textContent = 'Create New Task';
+            document.getElementById('submitBtn').textContent = 'Create Task';
+            document.getElementById('modalIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>';
+            document.getElementById('submitIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>';
+            resetForm();
+            setMinDateToToday(); // Ensure min dates are set when opening modal
+        }
+
+        function closeModal() {
+            document.getElementById('taskModal').classList.add('hidden');
+            resetForm();
+        }
+
+        function resetForm() {
+    document.getElementById('taskId').value = '';
+    document.getElementById('taskTitle').value = '';
+    document.getElementById('taskDescription').value = '';
+    document.getElementById('assignedUser').value = '';
+    document.getElementById('taskStatus').value = 'to_do';
+    document.getElementById('taskStartDate').value = '';
+    document.getElementById('taskUpdateDate').value = '';
+    
+    // Reset min dates to today
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('taskStartDate').setAttribute('min', today);
+    document.getElementById('taskUpdateDate').setAttribute('min', today);
+}
+
+        function updateMinUpdateDate() {
+    const today = new Date().toISOString().split('T')[0];
+    const startDate = document.getElementById('taskStartDate').value;
+    const updateDateInput = document.getElementById('taskUpdateDate');
+    
+    if (startDate) {
+        // Set min to the later of today or start date
+        const minDate = startDate > today ? startDate : today;
+        updateDateInput.setAttribute('min', minDate);
+        
+        const currentUpdateDate = updateDateInput.value;
+        if (currentUpdateDate && currentUpdateDate < minDate) {
+            updateDateInput.value = minDate;
+            showMessage('Update date has been adjusted to ' + (startDate > today ? 'start date' : 'today'), 'error');
+        }
+    } else {
+        updateDateInput.setAttribute('min', today);
+    }
+}
+
+        async function saveTask() {
+            const taskId = document.getElementById('taskId').value;
+            const token = localStorage.getItem('token');
+            
+            const startDate = document.getElementById('taskStartDate').value;
+            const updateDate = document.getElementById('taskUpdateDate').value;
+            
+            if (startDate && updateDate && updateDate < startDate) {
+                showMessage('Update date cannot be before start date', 'error');
+                return;
+            }
+            
+            const data = {
+                title: document.getElementById('taskTitle').value,
+                problemdescription: document.getElementById('taskDescription').value,
+                user_id: parseInt(document.getElementById('assignedUser').value),
+                project_id: parseInt(projectId),
+                status: document.getElementById('taskStatus').value,
+                startdate: startDate || null,
+                updatedate: updateDate || null
+            };
+            const today = new Date().toISOString().split('T')[0];
+
+// Validate dates are not in the past
+if (startDate && startDate < today) {
+    showMessage('Start date cannot be in the past', 'error');
+    return;
+}
+
+if (updateDate && updateDate < today) {
+    showMessage('Update date cannot be in the past', 'error');
+    return;
+}
+
+            if (!data.title || !data.problemdescription || !data.user_id) {
+                showMessage('All required fields must be filled', 'error');
+                return;
+            }
+
+            const url = taskId ? `/tasks/edit/${taskId}` : '/tasks/add';
+            const method = taskId ? 'PUT' : 'POST';
+
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Error');
+                }
+
+                showMessage(taskId ? 'Task updated successfully' : 'Task created successfully', 'success');
+                closeModal();
+                await loadTasks();
+            } catch (error) {
+                console.error('Save error:', error);
+                showMessage(error.message, 'error');
+            }
+        }
+
+        async function editTask(taskId) {
+            if (!isProjectOwner) {
+                showMessage('Only the owner can edit tasks', 'error');
+                return;
+            }
+            
+            const token = localStorage.getItem('token');
+            
+            try {
+                const response = await fetch(`/tasks/${taskId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) throw new Error('Loading error');
+                
+                const task = await response.json();
+                
+                document.getElementById('taskId').value = task.id;
+                document.getElementById('taskTitle').value = task.title;
+                document.getElementById('taskDescription').value = task.problemdescription;
+                document.getElementById('assignedUser').value = task.user_id;
+                document.getElementById('taskStatus').value = task.status;
+                document.getElementById('taskStartDate').value = task.startdate || '';
+                document.getElementById('taskUpdateDate').value = task.updatedate || '';
+                
+                updateMinUpdateDate();
+                
+                document.getElementById('modalTitle').textContent = 'Edit Task';
+                document.getElementById('submitBtn').textContent = 'Update';
+                document.getElementById('modalIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>';
+                document.getElementById('submitIcon').innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>';
+                document.getElementById('taskModal').classList.remove('hidden');
+            } catch (error) {
+                console.error('Error loading task:', error);
+                showMessage('Error loading task', 'error');
+            }
+        }
+
+        async function deleteTask(taskId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            if (!isProjectOwner) {
+                showMessage('Only the owner can delete tasks', 'error');
+                return;
+            }
+
+            const task = allTasks.find(t => t.id === taskId);
+            const taskTitle = task ? task.title : 'this task';
+
+            if (!confirm(`Are you sure you want to delete "${taskTitle}"?\n\nThis action is irreversible.`)) {
+                return;
+            }
+
+            const token = localStorage.getItem('token');
+
+            try {
+                const response = await fetch(`/tasks/delete/${taskId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.message || 'Delete error');
+                }
+
+                showMessage('Task deleted successfully', 'success');
+                await loadTasks();
+            } catch (error) {
+                console.error('Delete error:', error);
+                showMessage(error.message, 'error');
+            }
+        }
+
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const bgColor = type === 'success' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-red-50 border-red-200 text-red-700';
+            const icon = type === 'success' 
+                ? '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>'
+                : '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>';
+            
+            container.innerHTML = `
+                <div class="${bgColor} border px-4 py-3 rounded-lg flex items-center gap-2 shadow-sm animate-pulse">
+                    ${icon}
+                    <span>${message}</span>
+                </div>
+            `;
+            setTimeout(() => container.innerHTML = '', 4000);
+        }
+
+        document.getElementById('taskModal')?.addEventListener('click', (e) => {
+            if (e.target.id === 'taskModal') {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !document.getElementById('taskModal').classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        document.getElementById('sidebarToggle')?.addEventListener('click', () => {
+            document.getElementById('sidebar')?.classList.toggle('-translate-x-full');
+        });
+
+        document.getElementById('sidebarToggleMobile')?.addEventListener('click', () => {
+            document.getElementById('sidebar')?.classList.toggle('-translate-x-full');
+        });
+    </script>
+</body>
+</html>
